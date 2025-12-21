@@ -1,4 +1,5 @@
-import { createFileRoute, useParams } from '@tanstack/react-router'
+import { createFileRoute, Link, useParams, useRouter } from '@tanstack/react-router'
+import { useMemo, useState, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -13,13 +14,169 @@ import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { getProjectById, updateProject, deleteProject } from '@/server/db'
+import { Github, Gitlab, CheckCircle2, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/projects/$projectId/settings')({
   component: ProjectSettings,
+  loader: async ({ params }) => {
+    const project = await getProjectById({ data: params.projectId })
+    return { project }
+  },
 })
 
 function ProjectSettings() {
   const { projectId } = useParams({ from: '/projects/$projectId/settings' })
+  const { project } = Route.useLoaderData()
+  const router = useRouter()
+
+  // États pour les formulaires
+  const [generalForm, setGeneralForm] = useState({
+    name: project?.name || '',
+    description: project?.description || '',
+    status: project?.status || 'active',
+  })
+
+  const [datesForm, setDatesForm] = useState({
+    dueDate: project?.dueDate || '',
+  })
+
+  const [advancedSettings, setAdvancedSettings] = useState({
+    autoArchive: false,
+    emailNotifications: true,
+    privateMode: false,
+  })
+
+  const [savingGeneral, setSavingGeneral] = useState(false)
+  const [savingDates, setSavingDates] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  // Synchroniser les formulaires avec le projet
+  useEffect(() => {
+    if (project) {
+      setGeneralForm({
+        name: project.name || '',
+        description: project.description || '',
+        status: project.status || 'active',
+      })
+      setDatesForm({
+        dueDate: project.dueDate || '',
+      })
+    }
+  }, [project])
+
+  // Détecter le provider depuis la description du projet
+  const provider = useMemo(() => {
+    if (!project?.description) return null
+    if (project.description.includes('provider:github:')) return 'github'
+    if (project.description.includes('provider:gitlab:')) return 'gitlab'
+    return null
+  }, [project?.description])
+
+  // Extraire l'identifiant du provider
+  const providerInfo = useMemo(() => {
+    if (!project?.description || !provider) return null
+    const match = project.description.match(
+      /provider:(github|gitlab):([^\s\n]+)/,
+    )
+    return match ? match[2] : null
+  }, [project?.description, provider])
+
+  // Préserver le provider dans la description lors de la mise à jour
+  const preserveProviderInDescription = (newDescription: string) => {
+    if (!provider || !providerInfo) return newDescription
+    const providerPrefix = `provider:${provider}:${providerInfo}`
+    // Si la nouvelle description ne contient pas déjà le provider, l'ajouter
+    if (!newDescription.includes(providerPrefix)) {
+      return newDescription ? `${newDescription}\n\n${providerPrefix}` : providerPrefix
+    }
+    return newDescription
+  }
+
+  const handleSaveGeneral = async () => {
+    if (!generalForm.name.trim()) {
+      toast.error('Le nom du projet est requis')
+      return
+    }
+
+    const saveOperation = async () => {
+      setSavingGeneral(true)
+      const descriptionWithProvider = preserveProviderInDescription(generalForm.description)
+      const updated = await updateProject({
+        id: projectId,
+        updates: {
+          name: generalForm.name,
+          description: descriptionWithProvider,
+          status: generalForm.status as 'active' | 'completed' | 'paused',
+        },
+      })
+      router.invalidate()
+      return updated
+    }
+
+    toast.promise(saveOperation(), {
+      loading: 'Enregistrement des informations...',
+      success: () => {
+        setSavingGeneral(false)
+        return 'Informations du projet mises à jour'
+      },
+      error: (err) => {
+        setSavingGeneral(false)
+        return `Erreur: ${err.message || 'Erreur lors de la mise à jour'}`
+      },
+    })
+  }
+
+  const handleSaveDates = async () => {
+    const saveOperation = async () => {
+      setSavingDates(true)
+      const updated = await updateProject({
+        id: projectId,
+        updates: {
+          dueDate: datesForm.dueDate || null,
+        },
+      })
+      router.invalidate()
+      return updated
+    }
+
+    toast.promise(saveOperation(), {
+      loading: 'Enregistrement des dates...',
+      success: () => {
+        setSavingDates(false)
+        return 'Dates mises à jour'
+      },
+      error: (err) => {
+        setSavingDates(false)
+        return `Erreur: ${err.message || 'Erreur lors de la mise à jour'}`
+      },
+    })
+  }
+
+  const handleDeleteProject = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.')) {
+      return
+    }
+
+    setDeleting(true)
+    try {
+      await deleteProject(projectId)
+      toast.success('Projet supprimé')
+      router.navigate({ to: '/projects' })
+    } catch (error) {
+      toast.error('Erreur lors de la suppression')
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="flex-1 overflow-auto scrollbar-custom">
@@ -50,7 +207,13 @@ function ProjectSettings() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="project-name">Nom du projet</Label>
-                  <Input id="project-name" defaultValue={projectId} />
+                  <Input
+                    id="project-name"
+                    value={generalForm.name}
+                    onChange={(e) =>
+                      setGeneralForm({ ...generalForm, name: e.target.value })
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="project-description">Description</Label>
@@ -58,13 +221,39 @@ function ProjectSettings() {
                     id="project-description"
                     placeholder="Description du projet"
                     rows={4}
+                    value={generalForm.description}
+                    onChange={(e) =>
+                      setGeneralForm({
+                        ...generalForm,
+                        description: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="project-status">Statut</Label>
-                  <Input id="project-status" defaultValue="Actif" />
+                  <Select
+                    value={generalForm.status}
+                    onValueChange={(value: 'active' | 'completed' | 'paused') =>
+                      setGeneralForm({ ...generalForm, status: value })
+                    }
+                  >
+                    <SelectTrigger id="project-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Actif</SelectItem>
+                      <SelectItem value="completed">Terminé</SelectItem>
+                      <SelectItem value="paused">En pause</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button>Enregistrer les modifications</Button>
+                <Button onClick={handleSaveGeneral} disabled={savingGeneral}>
+                  {savingGeneral && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  Enregistrer les modifications
+                </Button>
               </CardContent>
             </Card>
 
@@ -77,14 +266,22 @@ function ProjectSettings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start-date">Date de début</Label>
-                  <Input id="start-date" type="date" />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="due-date">Date limite</Label>
-                  <Input id="due-date" type="date" />
+                  <Input
+                    id="due-date"
+                    type="date"
+                    value={datesForm.dueDate}
+                    onChange={(e) =>
+                      setDatesForm({ ...datesForm, dueDate: e.target.value })
+                    }
+                  />
                 </div>
-                <Button>Enregistrer</Button>
+                <Button onClick={handleSaveDates} disabled={savingDates}>
+                  {savingDates && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
+                  Enregistrer
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -114,27 +311,77 @@ function ProjectSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {provider !== 'gitlab' && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Github className="h-5 w-5 text-muted-foreground" />
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Label>GitHub</Label>
+                            {provider === 'github' && (
+                              <Badge variant="secondary" className="gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Configuré
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {provider === 'github' && providerInfo
+                              ? `Synchronisé avec ${providerInfo}`
+                              : 'Synchroniser les issues et PRs depuis GitHub'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/provider/github">
+                          {provider === 'github' ? 'Modifier' : 'Configurer'}
+                        </Link>
+                      </Button>
+                    </div>
+                    {provider !== 'github' && <Separator />}
+                  </>
+                )}
+                {provider !== 'github' && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <Gitlab className="h-5 w-5 text-muted-foreground" />
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Label>GitLab</Label>
+                            {provider === 'gitlab' && (
+                              <Badge variant="secondary" className="gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Configuré
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {provider === 'gitlab' && providerInfo
+                              ? `Synchronisé avec ${providerInfo}`
+                              : 'Synchroniser les issues et MRs depuis GitLab'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/provider/gitlab">
+                          {provider === 'gitlab' ? 'Modifier' : 'Configurer'}
+                        </Link>
+                      </Button>
+                    </div>
+                    {provider !== 'gitlab' && <Separator />}
+                  </>
+                )}
                 <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>GitHub</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Synchroniser les issues et PRs depuis GitHub
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Configurer
-                  </Button>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 flex-1">
                     <Label>Slack</Label>
                     <p className="text-sm text-muted-foreground">
                       Recevoir les notifications sur Slack
                     </p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    Configurer
+                  <Button variant="outline" size="sm" disabled>
+                    Bientôt disponible
                   </Button>
                 </div>
               </CardContent>
@@ -158,7 +405,15 @@ function ProjectSettings() {
                       jours
                     </p>
                   </div>
-                  <Switch />
+                  <Switch
+                    checked={advancedSettings.autoArchive}
+                    onCheckedChange={(checked) =>
+                      setAdvancedSettings({
+                        ...advancedSettings,
+                        autoArchive: checked,
+                      })
+                    }
+                  />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -168,7 +423,15 @@ function ProjectSettings() {
                       Recevoir des notifications par email pour ce projet
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={advancedSettings.emailNotifications}
+                    onCheckedChange={(checked) =>
+                      setAdvancedSettings({
+                        ...advancedSettings,
+                        emailNotifications: checked,
+                      })
+                    }
+                  />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -179,7 +442,15 @@ function ProjectSettings() {
                       membres)
                     </p>
                   </div>
-                  <Switch />
+                  <Switch
+                    checked={advancedSettings.privateMode}
+                    onCheckedChange={(checked) =>
+                      setAdvancedSettings({
+                        ...advancedSettings,
+                        privateMode: checked,
+                      })
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -200,7 +471,15 @@ function ProjectSettings() {
                     Cette action est irréversible. Toutes les données seront
                     supprimées.
                   </p>
-                  <Button variant="destructive" size="sm">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteProject}
+                    disabled={deleting}
+                  >
+                    {deleting && (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    )}
                     Supprimer le projet
                   </Button>
                 </div>
