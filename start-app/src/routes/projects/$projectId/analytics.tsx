@@ -59,7 +59,7 @@ function ProjectAnalytics() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 scrollbar-custom">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="space-y-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">
             Analytics - {projectId}
