@@ -1,10 +1,10 @@
-import { ReactNode } from "react";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SiteHeader } from "@/components/site-header";
+import { ReactNode } from 'react'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/AppSidebar'
+import { SiteHeader } from '@/components/site-header'
 
 interface LayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function Layout({ children }: LayoutProps) {
@@ -20,5 +20,5 @@ export function Layout({ children }: LayoutProps) {
         </SidebarInset>
       </div>
     </SidebarProvider>
-  );
+  )
 }

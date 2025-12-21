@@ -1,9 +1,9 @@
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus, ChevronDown } from 'lucide-react'
 
 interface PropertyRowProps {
-  label: string;
-  value: React.ReactNode;
-  icon?: React.ReactNode;
+  label: string
+  value: React.ReactNode
+  icon?: React.ReactNode
 }
 
 const PropertyRow = ({ label, value, icon }: PropertyRowProps) => (
@@ -14,7 +14,7 @@ const PropertyRow = ({ label, value, icon }: PropertyRowProps) => (
       {value}
     </div>
   </div>
-);
+)
 
 export const PropertiesPanel = () => {
   return (
@@ -41,7 +41,7 @@ export const PropertiesPanel = () => {
             </span>
           }
         />
-        
+
         <PropertyRow
           label="Priority"
           value={
@@ -50,7 +50,7 @@ export const PropertiesPanel = () => {
             </span>
           }
         />
-        
+
         <PropertyRow
           label="Lead"
           value={
@@ -62,7 +62,7 @@ export const PropertiesPanel = () => {
             </div>
           }
         />
-        
+
         <PropertyRow
           label="Members"
           value={
@@ -71,7 +71,7 @@ export const PropertiesPanel = () => {
             </button>
           }
         />
-        
+
         <PropertyRow
           label="Start date"
           value={
@@ -80,7 +80,7 @@ export const PropertiesPanel = () => {
             </button>
           }
         />
-        
+
         <PropertyRow
           label="Target date"
           value={
@@ -89,7 +89,7 @@ export const PropertiesPanel = () => {
             </span>
           }
         />
-        
+
         <PropertyRow
           label="Teams"
           value={
@@ -98,7 +98,7 @@ export const PropertiesPanel = () => {
             </span>
           }
         />
-        
+
         <PropertyRow
           label="Initiatives"
           value={
@@ -107,7 +107,7 @@ export const PropertiesPanel = () => {
             </button>
           }
         />
-        
+
         <PropertyRow
           label="Labels"
           value={
@@ -126,7 +126,8 @@ export const PropertiesPanel = () => {
           </button>
         </div>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Add milestones to organize work within your project and break it into more granular stages.
+          Add milestones to organize work within your project and break it into
+          more granular stages.
         </p>
       </div>
 
@@ -137,7 +138,7 @@ export const PropertiesPanel = () => {
             <ChevronDown className="h-4 w-4" />
           </button>
         </div>
-        
+
         <div className="space-y-3">
           <div>
             <div className="flex items-center justify-between text-xs mb-1">
@@ -145,7 +146,7 @@ export const PropertiesPanel = () => {
               <span className="text-foreground">31</span>
             </div>
           </div>
-          
+
           <div>
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-primary">🟦 Completed</span>
@@ -164,12 +165,12 @@ export const PropertiesPanel = () => {
             Labels
           </button>
         </div>
-        
+
         <div className="flex items-center justify-between py-3">
           <span className="text-sm text-muted-foreground">👤 No assignee</span>
           <span className="text-sm text-foreground">23</span>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,21 +1,27 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { CheckCircle2, AlertCircle, Circle, ChevronRight, GripVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import {
+  CheckCircle2,
+  AlertCircle,
+  Circle,
+  ChevronRight,
+  GripVertical,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-type IssueStatus = "done" | "warning" | "backlog" | "progress";
+type IssueStatus = 'done' | 'warning' | 'backlog' | 'progress'
 
 interface DraggableIssueRowProps {
-  id: string;
-  title: string;
-  status: IssueStatus;
-  date?: string;
-  hasChildren?: boolean;
-  childrenCount?: number;
-  isExpanded?: boolean;
-  onToggle?: () => void;
-  onClick?: () => void;
-  isDragOverlay?: boolean;
+  id: string
+  title: string
+  status: IssueStatus
+  date?: string
+  hasChildren?: boolean
+  childrenCount?: number
+  isExpanded?: boolean
+  onToggle?: () => void
+  onClick?: () => void
+  isDragOverlay?: boolean
 }
 
 const statusIcons = {
@@ -23,14 +29,14 @@ const statusIcons = {
   warning: AlertCircle,
   backlog: Circle,
   progress: Circle,
-};
+}
 
 const statusColors = {
-  done: "text-status-done",
-  warning: "text-status-warning",
-  backlog: "text-status-backlog",
-  progress: "text-status-progress",
-};
+  done: 'text-status-done',
+  warning: 'text-status-warning',
+  backlog: 'text-status-backlog',
+  progress: 'text-status-progress',
+}
 
 export const DraggableIssueRow = ({
   id,
@@ -51,33 +57,33 @@ export const DraggableIssueRow = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, disabled: isDragOverlay });
+  } = useSortable({ id, disabled: isDragOverlay })
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || "transform 200ms cubic-bezier(0.25, 1, 0.5, 1)",
-  };
+    transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
+  }
 
-  const StatusIcon = statusIcons[status];
+  const StatusIcon = statusIcons[status]
 
   if (isDragOverlay) {
     return (
       <div
         className={cn(
-          "flex items-center gap-3 px-4 py-2 border border-primary/50 bg-card rounded-lg shadow-2xl",
-          "text-sm cursor-grabbing"
+          'flex items-center gap-3 px-4 py-2 border border-primary/50 bg-card rounded-lg shadow-2xl',
+          'text-sm cursor-grabbing',
         )}
       >
         <GripVertical className="h-4 w-4 text-primary" />
         {hasChildren && (
           <ChevronRight
             className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform",
-              isExpanded && "rotate-90"
+              'h-4 w-4 text-muted-foreground transition-transform',
+              isExpanded && 'rotate-90',
             )}
           />
         )}
-        <StatusIcon className={cn("h-4 w-4", statusColors[status])} />
+        <StatusIcon className={cn('h-4 w-4', statusColors[status])} />
         <span className="text-muted-foreground font-mono text-xs">{id}</span>
         <span className="flex-1 text-foreground font-medium">{title}</span>
         {childrenCount && (
@@ -86,7 +92,7 @@ export const DraggableIssueRow = ({
           </span>
         )}
       </div>
-    );
+    )
   }
 
   return (
@@ -94,18 +100,18 @@ export const DraggableIssueRow = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-accent/50 cursor-pointer",
-        "text-sm transition-all duration-200",
-        isDragging && "opacity-40 bg-muted/50 border-dashed border-primary/30"
+        'group flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-accent/50 cursor-pointer',
+        'text-sm transition-all duration-200',
+        isDragging && 'opacity-40 bg-muted/50 border-dashed border-primary/30',
       )}
       onClick={onClick}
     >
       <button
         className={cn(
-          "cursor-grab active:cursor-grabbing hover:bg-secondary rounded p-1 transition-all duration-150",
-          "opacity-40 group-hover:opacity-100 hover:scale-110"
+          'cursor-grab active:cursor-grabbing hover:bg-secondary rounded p-1 transition-all duration-150',
+          'opacity-40 group-hover:opacity-100 hover:scale-110',
         )}
-        style={{ touchAction: "none" }}
+        style={{ touchAction: 'none' }}
         {...attributes}
         {...listeners}
       >
@@ -115,15 +121,15 @@ export const DraggableIssueRow = ({
       {hasChildren ? (
         <button
           onClick={(e) => {
-            e.stopPropagation();
-            onToggle?.();
+            e.stopPropagation()
+            onToggle?.()
           }}
           className="hover:bg-secondary rounded p-0.5 transition-colors"
         >
           <ChevronRight
             className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform duration-200",
-              isExpanded && "rotate-90"
+              'h-4 w-4 text-muted-foreground transition-transform duration-200',
+              isExpanded && 'rotate-90',
             )}
           />
         </button>
@@ -131,7 +137,7 @@ export const DraggableIssueRow = ({
         <div className="w-5" />
       )}
 
-      <StatusIcon className={cn("h-4 w-4", statusColors[status])} />
+      <StatusIcon className={cn('h-4 w-4', statusColors[status])} />
 
       <span className="text-muted-foreground font-mono text-xs">{id}</span>
 
@@ -156,5 +162,5 @@ export const DraggableIssueRow = ({
         <span className="text-muted-foreground text-lg leading-none">+</span>
       </button>
     </div>
-  );
-};
+  )
+}

@@ -340,34 +340,47 @@ function TokenHelpDialog({ provider }: { provider: 'github' | 'gitlab' }) {
                 <div>
                   <h4 className="font-medium">Permissions requises (scopes)</h4>
                   <div className="bg-muted/50 rounded-md p-3 mt-2 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-mono">read_api</span>
-                      <span className="text-sm text-muted-foreground">
-                        - Accès API en lecture
-                      </span>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5" />
+                      <div>
+                        <span className="text-sm font-mono font-bold">api</span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          (obligatoire)
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Accès complet à l'API. Permet de lire, créer, modifier et supprimer les issues.
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-mono">read_repository</span>
-                      <span className="text-sm text-muted-foreground">
-                        - Lire les repositories
-                      </span>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5" />
+                      <div>
+                        <span className="text-sm font-mono">read_user</span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          (recommandé)
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Lire vos infos utilisateur.
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-mono">read_user</span>
-                      <span className="text-sm text-muted-foreground">
-                        - Lire les infos utilisateur
-                      </span>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5" />
+                      <div>
+                        <span className="text-sm font-mono">read_repository</span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          (optionnel)
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Lire le contenu des repositories.
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-mono">profile</span>
-                      <span className="text-sm text-muted-foreground">
-                        - Accès au profil utilisateur
-                      </span>
-                    </div>
+                  </div>
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-md p-3 mt-3">
+                    <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                      <strong>⚠️ Sans le scope "api"</strong>, vous ne pourrez pas créer, modifier ou supprimer d'issues.
+                    </p>
                   </div>
                 </div>
               </div>

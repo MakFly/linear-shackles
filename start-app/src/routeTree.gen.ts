@@ -32,6 +32,7 @@ import { Route as ProviderGithubIndexRouteImport } from './routes/provider/githu
 import { Route as ProviderGitlabProjectIdRouteImport } from './routes/provider/gitlab/$projectId'
 import { Route as ProjectsProjectIdSettingsRouteImport } from './routes/projects/$projectId/settings'
 import { Route as ProjectsProjectIdIssuesRouteImport } from './routes/projects/$projectId/issues'
+import { Route as ProjectsProjectIdGitlabRouteImport } from './routes/projects/$projectId/gitlab'
 import { Route as ProjectsProjectIdGithubRouteImport } from './routes/projects/$projectId/github'
 import { Route as ProjectsProjectIdAnalyticsRouteImport } from './routes/projects/$projectId/analytics'
 import { Route as ProviderGithubOwnerRepoRouteImport } from './routes/provider/github/$owner/$repo'
@@ -152,6 +153,11 @@ const ProjectsProjectIdIssuesRoute = ProjectsProjectIdIssuesRouteImport.update({
   path: '/issues',
   getParentRoute: () => ProjectsProjectIdRoute,
 } as any)
+const ProjectsProjectIdGitlabRoute = ProjectsProjectIdGitlabRouteImport.update({
+  id: '/gitlab',
+  path: '/gitlab',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 const ProjectsProjectIdGithubRoute = ProjectsProjectIdGithubRouteImport.update({
   id: '/github',
   path: '/github',
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof ProjectsIndexRoute
   '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsRoute
   '/projects/$projectId/github': typeof ProjectsProjectIdGithubRoute
+  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabRoute
   '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesRoute
   '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsRoute
   '/provider/gitlab/$projectId': typeof ProviderGitlabProjectIdRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsIndexRoute
   '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsRoute
   '/projects/$projectId/github': typeof ProjectsProjectIdGithubRoute
+  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabRoute
   '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesRoute
   '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsRoute
   '/provider/gitlab/$projectId': typeof ProviderGitlabProjectIdRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsRoute
   '/projects/$projectId/github': typeof ProjectsProjectIdGithubRoute
+  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabRoute
   '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesRoute
   '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsRoute
   '/provider/gitlab/$projectId': typeof ProviderGitlabProjectIdRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/github'
+    | '/projects/$projectId/gitlab'
     | '/projects/$projectId/issues'
     | '/projects/$projectId/settings'
     | '/provider/gitlab/$projectId'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/github'
+    | '/projects/$projectId/gitlab'
     | '/projects/$projectId/issues'
     | '/projects/$projectId/settings'
     | '/provider/gitlab/$projectId'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/github'
+    | '/projects/$projectId/gitlab'
     | '/projects/$projectId/issues'
     | '/projects/$projectId/settings'
     | '/provider/gitlab/$projectId'
@@ -529,6 +541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdIssuesRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/gitlab': {
+      id: '/projects/$projectId/gitlab'
+      path: '/gitlab'
+      fullPath: '/projects/$projectId/gitlab'
+      preLoaderRoute: typeof ProjectsProjectIdGitlabRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
     '/projects/$projectId/github': {
       id: '/projects/$projectId/github'
       path: '/github'
@@ -556,6 +575,7 @@ declare module '@tanstack/react-router' {
 interface ProjectsProjectIdRouteChildren {
   ProjectsProjectIdAnalyticsRoute: typeof ProjectsProjectIdAnalyticsRoute
   ProjectsProjectIdGithubRoute: typeof ProjectsProjectIdGithubRoute
+  ProjectsProjectIdGitlabRoute: typeof ProjectsProjectIdGitlabRoute
   ProjectsProjectIdIssuesRoute: typeof ProjectsProjectIdIssuesRoute
   ProjectsProjectIdSettingsRoute: typeof ProjectsProjectIdSettingsRoute
 }
@@ -563,6 +583,7 @@ interface ProjectsProjectIdRouteChildren {
 const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
   ProjectsProjectIdAnalyticsRoute: ProjectsProjectIdAnalyticsRoute,
   ProjectsProjectIdGithubRoute: ProjectsProjectIdGithubRoute,
+  ProjectsProjectIdGitlabRoute: ProjectsProjectIdGitlabRoute,
   ProjectsProjectIdIssuesRoute: ProjectsProjectIdIssuesRoute,
   ProjectsProjectIdSettingsRoute: ProjectsProjectIdSettingsRoute,
 }

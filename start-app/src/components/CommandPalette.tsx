@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react'
 import {
   Command,
   CommandDialog,
@@ -8,19 +8,19 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
-import { CheckCircle2, Circle, AlertCircle, Search, Hash } from "lucide-react";
+} from '@/components/ui/command'
+import { CheckCircle2, Circle, AlertCircle, Search, Hash } from 'lucide-react'
 
 interface Issue {
-  id: string;
-  title: string;
-  status: "done" | "warning" | "backlog" | "progress";
+  id: string
+  title: string
+  status: 'done' | 'warning' | 'backlog' | 'progress'
 }
 
 interface CommandPaletteProps {
-  issues: Issue[];
-  onSelectIssue: (issueId: string) => void;
-  onChangeStatus: (issueId: string, status: string) => void;
+  issues: Issue[]
+  onSelectIssue: (issueId: string) => void
+  onChangeStatus: (issueId: string, status: string) => void
 }
 
 const statusIcons = {
@@ -28,29 +28,33 @@ const statusIcons = {
   warning: AlertCircle,
   backlog: Circle,
   progress: Circle,
-};
+}
 
-export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: CommandPaletteProps) => {
-  const [open, setOpen] = useState(false);
-  const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
+export const CommandPalette = ({
+  issues,
+  onSelectIssue,
+  onChangeStatus,
+}: CommandPaletteProps) => {
+  const [open, setOpen] = useState(false)
+  const [selectedIssue, setSelectedIssue] = useState<string | null>(null)
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setOpen((open) => !open)
       }
-    };
+    }
 
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+    document.addEventListener('keydown', down)
+    return () => document.removeEventListener('keydown', down)
+  }, [])
 
   const handleSelect = (callback: () => void) => {
-    callback();
-    setOpen(false);
-    setSelectedIssue(null);
-  };
+    callback()
+    setOpen(false)
+    setSelectedIssue(null)
+  }
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
@@ -62,7 +66,7 @@ export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: Comman
           <>
             <CommandGroup heading="Issues">
               {issues.map((issue) => {
-                const StatusIcon = statusIcons[issue.status];
+                const StatusIcon = statusIcons[issue.status]
                 return (
                   <CommandItem
                     key={issue.id}
@@ -74,22 +78,26 @@ export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: Comman
                     </span>
                     <span>{issue.title}</span>
                   </CommandItem>
-                );
+                )
               })}
             </CommandGroup>
 
             <CommandSeparator />
 
             <CommandGroup heading="Actions">
-              <CommandItem onSelect={() => setSelectedIssue("change-status")}>
+              <CommandItem onSelect={() => setSelectedIssue('change-status')}>
                 <Circle className="mr-2 h-4 w-4" />
                 <span>Change status...</span>
               </CommandItem>
-              <CommandItem onSelect={() => handleSelect(() => console.log("Create issue"))}>
+              <CommandItem
+                onSelect={() => handleSelect(() => console.log('Create issue'))}
+              >
                 <Hash className="mr-2 h-4 w-4" />
                 <span>Create new issue</span>
               </CommandItem>
-              <CommandItem onSelect={() => handleSelect(() => console.log("Search"))}>
+              <CommandItem
+                onSelect={() => handleSelect(() => console.log('Search'))}
+              >
                 <Search className="mr-2 h-4 w-4" />
                 <span>Search issues...</span>
               </CommandItem>
@@ -100,7 +108,7 @@ export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: Comman
             <CommandGroup heading="Change Status">
               <CommandItem
                 onSelect={() =>
-                  handleSelect(() => onChangeStatus(issues[0].id, "backlog"))
+                  handleSelect(() => onChangeStatus(issues[0].id, 'backlog'))
                 }
               >
                 <Circle className="mr-2 h-4 w-4 text-status-backlog" />
@@ -108,7 +116,7 @@ export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: Comman
               </CommandItem>
               <CommandItem
                 onSelect={() =>
-                  handleSelect(() => onChangeStatus(issues[0].id, "progress"))
+                  handleSelect(() => onChangeStatus(issues[0].id, 'progress'))
                 }
               >
                 <Circle className="mr-2 h-4 w-4 text-status-progress" />
@@ -116,7 +124,7 @@ export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: Comman
               </CommandItem>
               <CommandItem
                 onSelect={() =>
-                  handleSelect(() => onChangeStatus(issues[0].id, "done"))
+                  handleSelect(() => onChangeStatus(issues[0].id, 'done'))
                 }
               >
                 <CheckCircle2 className="mr-2 h-4 w-4 text-status-done" />
@@ -124,7 +132,7 @@ export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: Comman
               </CommandItem>
               <CommandItem
                 onSelect={() =>
-                  handleSelect(() => onChangeStatus(issues[0].id, "warning"))
+                  handleSelect(() => onChangeStatus(issues[0].id, 'warning'))
                 }
               >
                 <AlertCircle className="mr-2 h-4 w-4 text-status-warning" />
@@ -135,5 +143,5 @@ export const CommandPalette = ({ issues, onSelectIssue, onChangeStatus }: Comman
         )}
       </CommandList>
     </CommandDialog>
-  );
-};
+  )
+}

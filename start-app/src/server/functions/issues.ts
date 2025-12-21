@@ -3,6 +3,9 @@ import { db, issues } from '@/db'
 import { eq, desc } from 'drizzle-orm'
 import type { Issue, NewIssue } from '@/db/schema'
 
+// Type pour créer une issue sans les timestamps (ajoutés automatiquement)
+type CreateIssueInput = Omit<NewIssue, 'createdAt' | 'updatedAt'>
+
 export const getIssues = createServerFn({ method: 'GET' }).handler(async () => {
   const result = await db.select().from(issues).orderBy(desc(issues.createdAt))
   return result
@@ -16,7 +19,7 @@ export const getIssueById = createServerFn({ method: 'GET' })
   })
 
 export const createIssue = createServerFn({ method: 'POST' })
-  .inputValidator((issue: NewIssue) => issue)
+  .inputValidator((issue: CreateIssueInput) => issue)
   .handler(async ({ data: issue }) => {
     const now = new Date().toISOString()
     const result = await db

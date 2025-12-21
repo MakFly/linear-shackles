@@ -1,32 +1,32 @@
-import { useState } from "react";
-import { Plus, Trash2, Play, Pause } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Automation, IssueStatus, IssuePriority } from "@/types/issue";
+import { useState } from 'react'
+import { Plus, Trash2, Play, Pause } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Automation, IssueStatus, IssuePriority } from '@/types/issue'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { toast } from 'sonner'
 
 interface AutomationManagerProps {
-  automations: Automation[];
-  onCreateAutomation: (automation: Automation) => void;
-  onUpdateAutomation: (automation: Automation) => void;
-  onDeleteAutomation: (automationId: string) => void;
+  automations: Automation[]
+  onCreateAutomation: (automation: Automation) => void
+  onUpdateAutomation: (automation: Automation) => void
+  onDeleteAutomation: (automationId: string) => void
 }
 
 export const AutomationManager = ({
@@ -35,57 +35,61 @@ export const AutomationManager = ({
   onUpdateAutomation,
   onDeleteAutomation,
 }: AutomationManagerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [editingAutomation, setEditingAutomation] = useState<Automation | null>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [editingAutomation, setEditingAutomation] = useState<Automation | null>(
+    null,
+  )
   const [formData, setFormData] = useState<Partial<Automation>>({
-    name: "",
-    trigger: { type: "status_change", condition: {} },
-    action: { type: "set_status", value: {} },
+    name: '',
+    trigger: { type: 'status_change', condition: {} },
+    action: { type: 'set_status', value: {} },
     enabled: true,
-  });
+  })
 
   const handleSave = () => {
     if (!formData.name?.trim()) {
-      toast.error("Le nom de l'automation est requis");
-      return;
+      toast.error("Le nom de l'automation est requis")
+      return
     }
 
     const automation: Automation = {
       id: editingAutomation?.id || Date.now().toString(),
       name: formData.name,
-      trigger: formData.trigger || { type: "status_change", condition: {} },
-      action: formData.action || { type: "set_status", value: {} },
+      trigger: formData.trigger || { type: 'status_change', condition: {} },
+      action: formData.action || { type: 'set_status', value: {} },
       enabled: formData.enabled ?? true,
-    };
-
-    if (editingAutomation) {
-      onUpdateAutomation(automation);
-      toast.success("Automation mise à jour");
-    } else {
-      onCreateAutomation(automation);
-      toast.success("Automation créée");
     }
 
-    setIsOpen(false);
-    setEditingAutomation(null);
+    if (editingAutomation) {
+      onUpdateAutomation(automation)
+      toast.success('Automation mise à jour')
+    } else {
+      onCreateAutomation(automation)
+      toast.success('Automation créée')
+    }
+
+    setIsOpen(false)
+    setEditingAutomation(null)
     setFormData({
-      name: "",
-      trigger: { type: "status_change", condition: {} },
-      action: { type: "set_status", value: {} },
+      name: '',
+      trigger: { type: 'status_change', condition: {} },
+      action: { type: 'set_status', value: {} },
       enabled: true,
-    });
-  };
+    })
+  }
 
   const handleEdit = (automation: Automation) => {
-    setEditingAutomation(automation);
-    setFormData(automation);
-    setIsOpen(true);
-  };
+    setEditingAutomation(automation)
+    setFormData(automation)
+    setIsOpen(true)
+  }
 
   const handleToggleEnabled = (automation: Automation) => {
-    onUpdateAutomation({ ...automation, enabled: !automation.enabled });
-    toast.success(automation.enabled ? "Automation désactivée" : "Automation activée");
-  };
+    onUpdateAutomation({ ...automation, enabled: !automation.enabled })
+    toast.success(
+      automation.enabled ? 'Automation désactivée' : 'Automation activée',
+    )
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -98,7 +102,9 @@ export const AutomationManager = ({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {editingAutomation ? "Modifier l'automation" : "Gérer les automations"}
+            {editingAutomation
+              ? "Modifier l'automation"
+              : 'Gérer les automations'}
           </DialogTitle>
         </DialogHeader>
 
@@ -151,8 +157,8 @@ export const AutomationManager = ({
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        onDeleteAutomation(automation.id);
-                        toast.success("Automation supprimée");
+                        onDeleteAutomation(automation.id)
+                        toast.success('Automation supprimée')
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -169,7 +175,9 @@ export const AutomationManager = ({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Ex: Notifier quand urgent"
               />
             </div>
@@ -182,7 +190,11 @@ export const AutomationManager = ({
                   onValueChange={(value: any) =>
                     setFormData({
                       ...formData,
-                      trigger: { ...formData.trigger, type: value, condition: {} },
+                      trigger: {
+                        ...formData.trigger,
+                        type: value,
+                        condition: {},
+                      },
                     })
                   }
                 >
@@ -190,9 +202,15 @@ export const AutomationManager = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="status_change">Changement de statut</SelectItem>
-                    <SelectItem value="priority_change">Changement de priorité</SelectItem>
-                    <SelectItem value="field_change">Changement de champ</SelectItem>
+                    <SelectItem value="status_change">
+                      Changement de statut
+                    </SelectItem>
+                    <SelectItem value="priority_change">
+                      Changement de priorité
+                    </SelectItem>
+                    <SelectItem value="field_change">
+                      Changement de champ
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -212,8 +230,12 @@ export const AutomationManager = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="set_status">Définir le statut</SelectItem>
-                    <SelectItem value="set_priority">Définir la priorité</SelectItem>
+                    <SelectItem value="set_status">
+                      Définir le statut
+                    </SelectItem>
+                    <SelectItem value="set_priority">
+                      Définir la priorité
+                    </SelectItem>
                     <SelectItem value="add_label">Ajouter un label</SelectItem>
                     <SelectItem value="assign">Assigner</SelectItem>
                     <SelectItem value="notify">Notifier</SelectItem>
@@ -222,7 +244,7 @@ export const AutomationManager = ({
               </div>
             </div>
 
-            {formData.trigger?.type === "status_change" && (
+            {formData.trigger?.type === 'status_change' && (
               <div>
                 <Label>Quand le statut devient</Label>
                 <Select
@@ -250,7 +272,7 @@ export const AutomationManager = ({
               </div>
             )}
 
-            {formData.action?.type === "set_priority" && (
+            {formData.action?.type === 'set_priority' && (
               <div>
                 <Label>Définir la priorité à</Label>
                 <Select
@@ -291,19 +313,19 @@ export const AutomationManager = ({
 
             <div className="flex gap-2">
               <Button onClick={handleSave}>
-                {editingAutomation ? "Mettre à jour" : "Créer l'automation"}
+                {editingAutomation ? 'Mettre à jour' : "Créer l'automation"}
               </Button>
               {editingAutomation && (
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setEditingAutomation(null);
+                    setEditingAutomation(null)
                     setFormData({
-                      name: "",
-                      trigger: { type: "status_change", condition: {} },
-                      action: { type: "set_status", value: {} },
+                      name: '',
+                      trigger: { type: 'status_change', condition: {} },
+                      action: { type: 'set_status', value: {} },
                       enabled: true,
-                    });
+                    })
                   }}
                 >
                   Annuler
@@ -314,5 +336,5 @@ export const AutomationManager = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

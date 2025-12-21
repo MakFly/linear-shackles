@@ -1,50 +1,50 @@
-import { useState } from "react";
-import { X, Plus, Save, Trash2, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FilterConfig, IssueStatus, IssuePriority } from "@/types/issue";
+import { useState } from 'react'
+import { X, Plus, Save, Trash2, ChevronDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { FilterConfig, IssueStatus, IssuePriority } from '@/types/issue'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+} from '@/components/ui/select'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { toast } from 'sonner'
 
 interface FilterPanelProps {
-  currentFilter: FilterConfig;
-  savedViews: FilterConfig[];
-  onFilterChange: (filter: FilterConfig) => void;
-  onSaveView: (view: FilterConfig) => void;
-  onDeleteView: (viewId: string) => void;
-  onLoadView: (view: FilterConfig) => void;
+  currentFilter: FilterConfig
+  savedViews: FilterConfig[]
+  onFilterChange: (filter: FilterConfig) => void
+  onSaveView: (view: FilterConfig) => void
+  onDeleteView: (viewId: string) => void
+  onLoadView: (view: FilterConfig) => void
 }
 
 const statusOptions: { value: IssueStatus; label: string }[] = [
-  { value: "backlog", label: "Backlog" },
-  { value: "progress", label: "In Progress" },
-  { value: "warning", label: "Blocked" },
-  { value: "done", label: "Done" },
-];
+  { value: 'backlog', label: 'Backlog' },
+  { value: 'progress', label: 'In Progress' },
+  { value: 'warning', label: 'Blocked' },
+  { value: 'done', label: 'Done' },
+]
 
 const priorityOptions: { value: IssuePriority; label: string }[] = [
-  { value: "urgent", label: "Urgent" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-  { value: "none", label: "None" },
-];
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+  { value: 'none', label: 'None' },
+]
 
 export const FilterPanel = ({
   currentFilter,
@@ -54,55 +54,61 @@ export const FilterPanel = ({
   onDeleteView,
   onLoadView,
 }: FilterPanelProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [viewName, setViewName] = useState("");
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
+  const [viewName, setViewName] = useState('')
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
 
   const handleStatusToggle = (status: IssueStatus) => {
-    const current = currentFilter.status || [];
+    const current = currentFilter.status || []
     const updated = current.includes(status)
       ? current.filter((s) => s !== status)
-      : [...current, status];
-    
-    onFilterChange({ ...currentFilter, status: updated.length > 0 ? updated : undefined });
-  };
+      : [...current, status]
+
+    onFilterChange({
+      ...currentFilter,
+      status: updated.length > 0 ? updated : undefined,
+    })
+  }
 
   const handlePriorityToggle = (priority: IssuePriority) => {
-    const current = currentFilter.priority || [];
+    const current = currentFilter.priority || []
     const updated = current.includes(priority)
       ? current.filter((p) => p !== priority)
-      : [...current, priority];
-    
-    onFilterChange({ ...currentFilter, priority: updated.length > 0 ? updated : undefined });
-  };
+      : [...current, priority]
+
+    onFilterChange({
+      ...currentFilter,
+      priority: updated.length > 0 ? updated : undefined,
+    })
+  }
 
   const handleSaveView = () => {
     if (!viewName.trim()) {
-      toast.error("Veuillez entrer un nom pour la vue");
-      return;
+      toast.error('Veuillez entrer un nom pour la vue')
+      return
     }
 
     const newView: FilterConfig = {
       ...currentFilter,
       id: Date.now().toString(),
       name: viewName,
-    };
+    }
 
-    onSaveView(newView);
-    setViewName("");
-    setShowSaveDialog(false);
-    toast.success("Vue enregistrée", {
+    onSaveView(newView)
+    setViewName('')
+    setShowSaveDialog(false)
+    toast.success('Vue enregistrée', {
       description: `Vue "${newView.name}" créée avec succès`,
-    });
-  };
+    })
+  }
 
   const handleClearFilters = () => {
     onFilterChange({
-      id: "default",
-      name: "Tous les issues",
-    });
-    toast.success("Filtres réinitialisés");
-  };
+      id: 'default',
+      name: 'Tous les issues',
+    })
+    toast.success('Filtres réinitialisés')
+  }
 
   const activeFiltersCount = [
     currentFilter.status?.length || 0,
@@ -110,7 +116,7 @@ export const FilterPanel = ({
     currentFilter.labels?.length || 0,
     currentFilter.assignees?.length || 0,
     currentFilter.search ? 1 : 0,
-  ].reduce((a, b) => a + b, 0);
+  ].reduce((a, b) => a + b, 0)
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -133,12 +139,14 @@ export const FilterPanel = ({
           <div className="space-y-6">
             {/* Saved Views */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Vues enregistrées</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                Vues enregistrées
+              </Label>
               <Select
                 value={currentFilter.id}
                 onValueChange={(id) => {
-                  const view = savedViews.find((v) => v.id === id);
-                  if (view) onLoadView(view);
+                  const view = savedViews.find((v) => v.id === id)
+                  if (view) onLoadView(view)
                 }}
               >
                 <SelectTrigger>
@@ -165,7 +173,11 @@ export const FilterPanel = ({
                       <Save className="h-3 w-3 mr-1" />
                       Enregistrer
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setShowSaveDialog(false)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowSaveDialog(false)}
+                    >
                       Annuler
                     </Button>
                   </div>
@@ -185,12 +197,17 @@ export const FilterPanel = ({
 
             {/* Search */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Recherche</Label>
+              <Label className="text-sm font-medium mb-2 block">
+                Recherche
+              </Label>
               <Input
                 placeholder="Rechercher des issues..."
-                value={currentFilter.search || ""}
+                value={currentFilter.search || ''}
                 onChange={(e) =>
-                  onFilterChange({ ...currentFilter, search: e.target.value || undefined })
+                  onFilterChange({
+                    ...currentFilter,
+                    search: e.target.value || undefined,
+                  })
                 }
               />
             </div>
@@ -200,7 +217,10 @@ export const FilterPanel = ({
               <Label className="text-sm font-medium mb-2 block">Statut</Label>
               <div className="space-y-2">
                 {statusOptions.map((option) => (
-                  <div key={option.value} className="flex items-center space-x-2">
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2"
+                  >
                     <Checkbox
                       id={`status-${option.value}`}
                       checked={currentFilter.status?.includes(option.value)}
@@ -222,7 +242,10 @@ export const FilterPanel = ({
               <Label className="text-sm font-medium mb-2 block">Priorité</Label>
               <div className="space-y-2">
                 {priorityOptions.map((option) => (
-                  <div key={option.value} className="flex items-center space-x-2">
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2"
+                  >
                     <Checkbox
                       id={`priority-${option.value}`}
                       checked={currentFilter.priority?.includes(option.value)}
@@ -252,7 +275,9 @@ export const FilterPanel = ({
             {/* Manage Saved Views */}
             {savedViews.length > 0 && (
               <div>
-                <Label className="text-sm font-medium mb-2 block">Gérer les vues</Label>
+                <Label className="text-sm font-medium mb-2 block">
+                  Gérer les vues
+                </Label>
                 <div className="space-y-2">
                   {savedViews.map((view) => (
                     <div
@@ -264,8 +289,8 @@ export const FilterPanel = ({
                         size="sm"
                         variant="ghost"
                         onClick={() => {
-                          onDeleteView(view.id);
-                          toast.success("Vue supprimée");
+                          onDeleteView(view.id)
+                          toast.success('Vue supprimée')
                         }}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -279,5 +304,5 @@ export const FilterPanel = ({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  );
-};
+  )
+}

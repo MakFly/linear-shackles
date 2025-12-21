@@ -1,19 +1,25 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import { createFileRoute, useParams } from '@tanstack/react-router'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute("/projects/$projectId/settings")({
+export const Route = createFileRoute('/projects/$projectId/settings')({
   component: ProjectSettings,
-});
+})
 
 function ProjectSettings() {
-  const { projectId } = useParams({ from: "/projects/$projectId/settings" });
+  const { projectId } = useParams({ from: '/projects/$projectId/settings' })
 
   return (
     <div className="flex-1 overflow-auto scrollbar-custom">
@@ -48,8 +54,8 @@ function ProjectSettings() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="project-description">Description</Label>
-                  <Textarea 
-                    id="project-description" 
+                  <Textarea
+                    id="project-description"
                     placeholder="Description du projet"
                     rows={4}
                   />
@@ -115,7 +121,9 @@ function ProjectSettings() {
                       Synchroniser les issues et PRs depuis GitHub
                     </p>
                   </div>
-                  <Button variant="outline" size="sm">Configurer</Button>
+                  <Button variant="outline" size="sm">
+                    Configurer
+                  </Button>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -125,7 +133,9 @@ function ProjectSettings() {
                       Recevoir les notifications sur Slack
                     </p>
                   </div>
-                  <Button variant="outline" size="sm">Configurer</Button>
+                  <Button variant="outline" size="sm">
+                    Configurer
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -144,7 +154,8 @@ function ProjectSettings() {
                   <div className="space-y-0.5">
                     <Label>Archivage automatique</Label>
                     <p className="text-sm text-muted-foreground">
-                      Archiver automatiquement les issues résolues après 30 jours
+                      Archiver automatiquement les issues résolues après 30
+                      jours
                     </p>
                   </div>
                   <Switch />
@@ -164,7 +175,8 @@ function ProjectSettings() {
                   <div className="space-y-0.5">
                     <Label>Mode privé</Label>
                     <p className="text-sm text-muted-foreground">
-                      Rendre ce projet privé (visible uniquement par les membres)
+                      Rendre ce projet privé (visible uniquement par les
+                      membres)
                     </p>
                   </div>
                   <Switch />
@@ -174,7 +186,9 @@ function ProjectSettings() {
 
             <Card className="border-destructive">
               <CardHeader>
-                <CardTitle className="text-destructive">Zone de danger</CardTitle>
+                <CardTitle className="text-destructive">
+                  Zone de danger
+                </CardTitle>
                 <CardDescription>
                   Actions irréversibles sur ce projet
                 </CardDescription>
@@ -183,7 +197,8 @@ function ProjectSettings() {
                 <div className="space-y-2">
                   <Label>Supprimer le projet</Label>
                   <p className="text-sm text-muted-foreground">
-                    Cette action est irréversible. Toutes les données seront supprimées.
+                    Cette action est irréversible. Toutes les données seront
+                    supprimées.
                   </p>
                   <Button variant="destructive" size="sm">
                     Supprimer le projet
@@ -195,5 +210,5 @@ function ProjectSettings() {
         </Tabs>
       </div>
     </div>
-  );
+  )
 }

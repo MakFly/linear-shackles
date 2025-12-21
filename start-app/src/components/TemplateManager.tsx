@@ -1,34 +1,39 @@
-import { useState } from "react";
-import { Plus, Trash2, Edit2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { IssueTemplate, IssuePriority, IssueStatus, CustomField } from "@/types/issue";
-import { CustomFieldEditor } from "@/components/CustomFieldEditor";
+import { useState } from 'react'
+import { Plus, Trash2, Edit2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  IssueTemplate,
+  IssuePriority,
+  IssueStatus,
+  CustomField,
+} from '@/types/issue'
+import { CustomFieldEditor } from '@/components/CustomFieldEditor'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "sonner";
+} from '@/components/ui/select'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { toast } from 'sonner'
 
 interface TemplateManagerProps {
-  templates: IssueTemplate[];
-  onCreateTemplate: (template: IssueTemplate) => void;
-  onUpdateTemplate: (template: IssueTemplate) => void;
-  onDeleteTemplate: (templateId: string) => void;
-  onUseTemplate: (template: IssueTemplate) => void;
+  templates: IssueTemplate[]
+  onCreateTemplate: (template: IssueTemplate) => void
+  onUpdateTemplate: (template: IssueTemplate) => void
+  onDeleteTemplate: (templateId: string) => void
+  onUseTemplate: (template: IssueTemplate) => void
 }
 
 export const TemplateManager = ({
@@ -38,67 +43,71 @@ export const TemplateManager = ({
   onDeleteTemplate,
   onUseTemplate,
 }: TemplateManagerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<IssueTemplate | null>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [editingTemplate, setEditingTemplate] = useState<IssueTemplate | null>(
+    null,
+  )
   const [formData, setFormData] = useState<Partial<IssueTemplate>>({
-    name: "",
-    description: "",
-    defaultStatus: "backlog",
-    defaultPriority: "medium",
+    name: '',
+    description: '',
+    defaultStatus: 'backlog',
+    defaultPriority: 'medium',
     customFields: [],
     labels: [],
-  });
+  })
 
   const handleSave = () => {
     if (!formData.name?.trim()) {
-      toast.error("Le nom du template est requis");
-      return;
+      toast.error('Le nom du template est requis')
+      return
     }
 
     const template: IssueTemplate = {
       id: editingTemplate?.id || Date.now().toString(),
       name: formData.name,
       description: formData.description,
-      defaultStatus: formData.defaultStatus || "backlog",
-      defaultPriority: formData.defaultPriority || "medium",
-      customFields: (formData.customFields || []).map(({ id, name, type, options }) => ({
-        id,
-        name,
-        type,
-        options,
-      })),
+      defaultStatus: formData.defaultStatus || 'backlog',
+      defaultPriority: formData.defaultPriority || 'medium',
+      customFields: (formData.customFields || []).map(
+        ({ id, name, type, options }) => ({
+          id,
+          name,
+          type,
+          options,
+        }),
+      ),
       labels: formData.labels,
-    };
-
-    if (editingTemplate) {
-      onUpdateTemplate(template);
-      toast.success("Template mis à jour");
-    } else {
-      onCreateTemplate(template);
-      toast.success("Template créé");
     }
 
-    setIsOpen(false);
-    setEditingTemplate(null);
+    if (editingTemplate) {
+      onUpdateTemplate(template)
+      toast.success('Template mis à jour')
+    } else {
+      onCreateTemplate(template)
+      toast.success('Template créé')
+    }
+
+    setIsOpen(false)
+    setEditingTemplate(null)
     setFormData({
-      name: "",
-      description: "",
-      defaultStatus: "backlog",
-      defaultPriority: "medium",
+      name: '',
+      description: '',
+      defaultStatus: 'backlog',
+      defaultPriority: 'medium',
       customFields: [],
       labels: [],
-    });
-  };
+    })
+  }
 
   const handleEdit = (template: IssueTemplate) => {
-    setEditingTemplate(template);
+    setEditingTemplate(template)
     const fieldsWithValues = template.customFields.map((field) => ({
       ...field,
-      value: "",
-    }));
-    setFormData({ ...template, customFields: fieldsWithValues });
-    setIsOpen(true);
-  };
+      value: '',
+    }))
+    setFormData({ ...template, customFields: fieldsWithValues })
+    setIsOpen(true)
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -111,7 +120,7 @@ export const TemplateManager = ({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {editingTemplate ? "Modifier le template" : "Gérer les templates"}
+            {editingTemplate ? 'Modifier le template' : 'Gérer les templates'}
           </DialogTitle>
         </DialogHeader>
 
@@ -137,9 +146,9 @@ export const TemplateManager = ({
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        onUseTemplate(template);
-                        setIsOpen(false);
-                        toast.success("Template appliqué");
+                        onUseTemplate(template)
+                        setIsOpen(false)
+                        toast.success('Template appliqué')
                       }}
                     >
                       Utiliser
@@ -155,8 +164,8 @@ export const TemplateManager = ({
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        onDeleteTemplate(template.id);
-                        toast.success("Template supprimé");
+                        onDeleteTemplate(template.id)
+                        toast.success('Template supprimé')
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -173,7 +182,9 @@ export const TemplateManager = ({
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Ex: Bug Report, Feature Request"
               />
             </div>
@@ -183,7 +194,9 @@ export const TemplateManager = ({
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Description du template..."
               />
             </div>
@@ -236,30 +249,32 @@ export const TemplateManager = ({
               <CustomFieldEditor
                 fields={(formData.customFields || []).map((f: any) => ({
                   ...f,
-                  value: f.value || "",
+                  value: f.value || '',
                 }))}
-                onChange={(fields) => setFormData({ ...formData, customFields: fields })}
+                onChange={(fields) =>
+                  setFormData({ ...formData, customFields: fields })
+                }
                 editMode={true}
               />
             </div>
 
             <div className="flex gap-2">
               <Button onClick={handleSave}>
-                {editingTemplate ? "Mettre à jour" : "Créer le template"}
+                {editingTemplate ? 'Mettre à jour' : 'Créer le template'}
               </Button>
               {editingTemplate && (
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setEditingTemplate(null);
+                    setEditingTemplate(null)
                     setFormData({
-                      name: "",
-                      description: "",
-                      defaultStatus: "backlog",
-                      defaultPriority: "medium",
+                      name: '',
+                      description: '',
+                      defaultStatus: 'backlog',
+                      defaultPriority: 'medium',
                       customFields: [],
                       labels: [],
-                    });
+                    })
                   }}
                 >
                   Annuler
@@ -270,5 +285,5 @@ export const TemplateManager = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

@@ -19,3 +19,16 @@ export const createUpdate = createServerFn({ method: 'POST' })
     const result = await db.insert(updates).values(update).returning()
     return result[0]
   })
+
+export const getUpdatesByIssueId = createServerFn({ method: 'GET' })
+  .inputValidator((issueId: string) => issueId)
+  .handler(async ({ data: issueId }) => {
+    const result = await db
+      .select()
+      .from(updates)
+      .orderBy(desc(updates.timestamp))
+    return result.filter((update) => {
+      const metadata = update.metadata as Record<string, unknown> | null
+      return metadata?.issueId === issueId
+    })
+  })

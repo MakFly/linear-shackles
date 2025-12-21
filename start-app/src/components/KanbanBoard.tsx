@@ -1,52 +1,61 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from 'react'
 import {
   KanbanBoard as ShadcnKanbanBoard,
   KanbanCard,
   KanbanCards,
   KanbanHeader,
   KanbanProvider,
-} from "@/components/ui/shadcn-io/kanban";
-import { Issue, IssueStatus } from "@/types/issue";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CheckCircle2, AlertCircle, Circle } from "lucide-react";
-import { toast } from "sonner";
+} from '@/components/ui/shadcn-io/kanban'
+import { Issue, IssueStatus } from '@/types/issue'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { CheckCircle2, AlertCircle, Circle } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface KanbanBoardProps {
-  issues: Issue[];
-  onIssueClick: (issue: Issue) => void;
-  onStatusChange: (issueId: string, newStatus: IssueStatus) => void;
+  issues: Issue[]
+  onIssueClick: (issue: Issue) => void
+  onStatusChange: (issueId: string, newStatus: IssueStatus) => void
 }
 
-const statusConfig: Record<IssueStatus, { label: string; icon: any; color: string }> = {
-  backlog: { label: "Backlog", icon: Circle, color: "#6B7280" },
-  progress: { label: "In Progress", icon: Circle, color: "#F59E0B" },
-  warning: { label: "Blocked", icon: AlertCircle, color: "#EF4444" },
-  done: { label: "Done", icon: CheckCircle2, color: "#10B981" },
-};
+const statusConfig: Record<
+  IssueStatus,
+  { label: string; icon: any; color: string }
+> = {
+  backlog: { label: 'Backlog', icon: Circle, color: '#6B7280' },
+  progress: { label: 'In Progress', icon: Circle, color: '#F59E0B' },
+  warning: { label: 'Blocked', icon: AlertCircle, color: '#EF4444' },
+  done: { label: 'Done', icon: CheckCircle2, color: '#10B981' },
+}
 
 type KanbanIssue = Issue & {
-  column: string;
-  name: string;
-};
+  column: string
+  name: string
+}
 
 type KanbanColumn = {
-  id: string;
-  name: string;
-  color: string;
-};
+  id: string
+  name: string
+  color: string
+}
 
-export const KanbanBoard = ({ issues, onIssueClick, onStatusChange }: KanbanBoardProps) => {
+export const KanbanBoard = ({
+  issues,
+  onIssueClick,
+  onStatusChange,
+}: KanbanBoardProps) => {
   const columns: KanbanColumn[] = useMemo(
     () =>
-      (["backlog", "progress", "warning", "done"] as IssueStatus[]).map((status) => ({
-        id: status,
-        name: statusConfig[status].label,
-        color: statusConfig[status].color,
-      })),
-    []
-  );
+      (['backlog', 'progress', 'warning', 'done'] as IssueStatus[]).map(
+        (status) => ({
+          id: status,
+          name: statusConfig[status].label,
+          color: statusConfig[status].color,
+        }),
+      ),
+    [],
+  )
 
-  const [data, setData] = useState<KanbanIssue[]>([]);
+  const [data, setData] = useState<KanbanIssue[]>([])
 
   // Sync data when issues change
   useEffect(() => {
@@ -55,36 +64,40 @@ export const KanbanBoard = ({ issues, onIssueClick, onStatusChange }: KanbanBoar
         ...issue,
         column: issue.status,
         name: issue.title,
-      }))
-    );
-  }, [issues]);
+      })),
+    )
+  }, [issues])
 
   const handleDataChange = (newData: KanbanIssue[]) => {
     // Find issues that changed column before updating state
-    const changedIssues: Array<{ id: string; oldStatus: IssueStatus; newStatus: IssueStatus }> = [];
-    
+    const changedIssues: Array<{
+      id: string
+      oldStatus: IssueStatus
+      newStatus: IssueStatus
+    }> = []
+
     newData.forEach((item) => {
-      const originalIssue = issues.find((i) => i.id === item.id);
+      const originalIssue = issues.find((i) => i.id === item.id)
       if (originalIssue && originalIssue.status !== item.column) {
         changedIssues.push({
           id: item.id,
           oldStatus: originalIssue.status,
           newStatus: item.column as IssueStatus,
-        });
+        })
       }
-    });
+    })
 
     // Update local state
-    setData(newData);
+    setData(newData)
 
     // Notify parent of status changes
     changedIssues.forEach(({ id, newStatus }) => {
-      onStatusChange(id, newStatus);
-      toast.success("Issue déplacé", {
+      onStatusChange(id, newStatus)
+      toast.success('Issue déplacé', {
         description: `${id} → ${statusConfig[newStatus].label}`,
-      });
-    });
-  };
+      })
+    })
+  }
 
   return (
     <div className="h-full w-full overflow-hidden p-4 flex flex-col">
@@ -120,13 +133,13 @@ export const KanbanBoard = ({ issues, onIssueClick, onStatusChange }: KanbanBoar
                   <div
                     className="flex items-start justify-between gap-2"
                     onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      onIssueClick(issue);
+                      e.stopPropagation()
+                      onIssueClick(issue)
                     }}
                   >
                     <div className="flex flex-col gap-1 flex-1">
                       <p className="m-0 font-medium text-sm">{issue.name}</p>
-                      {issue.priority && issue.priority !== "none" && (
+                      {issue.priority && issue.priority !== 'none' && (
                         <span className="text-muted-foreground text-xs">
                           {issue.priority}
                         </span>
@@ -159,5 +172,5 @@ export const KanbanBoard = ({ issues, onIssueClick, onStatusChange }: KanbanBoar
         )}
       </KanbanProvider>
     </div>
-  );
-};
+  )
+}

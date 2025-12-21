@@ -1,37 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
 
 const shortcuts = [
-  { keys: ["⌘", "K"], description: "Ouvrir la palette de commandes" },
-  { keys: ["J"], description: "Issue suivante" },
-  { keys: ["K"], description: "Issue précédente" },
-  { keys: ["X"], description: "Sélectionner l'issue" },
-  { keys: ["E"], description: "Éditer l'issue" },
-  { keys: ["C"], description: "Créer une nouvelle issue" },
-  { keys: ["?"], description: "Afficher les raccourcis clavier" },
-  { keys: ["ESC"], description: "Fermer les modales" },
-];
+  { keys: ['⌘', 'K'], description: 'Ouvrir la palette de commandes' },
+  { keys: ['J'], description: 'Issue suivante' },
+  { keys: ['K'], description: 'Issue précédente' },
+  { keys: ['X'], description: "Sélectionner l'issue" },
+  { keys: ['E'], description: "Éditer l'issue" },
+  { keys: ['C'], description: 'Créer une nouvelle issue' },
+  { keys: ['?'], description: 'Afficher les raccourcis clavier' },
+  { keys: ['ESC'], description: 'Fermer les modales' },
+]
 
 export const KeyboardShortcutsDialog = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault();
-        setOpen((prev) => !prev);
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault()
+        setOpen((prev) => !prev)
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -49,7 +49,9 @@ export const KeyboardShortcutsDialog = () => {
               key={index}
               className="flex items-center justify-between py-2 border-b border-border last:border-0"
             >
-              <span className="text-sm text-foreground">{shortcut.description}</span>
+              <span className="text-sm text-foreground">
+                {shortcut.description}
+              </span>
               <div className="flex gap-1">
                 {shortcut.keys.map((key, keyIndex) => (
                   <kbd
@@ -66,10 +68,14 @@ export const KeyboardShortcutsDialog = () => {
 
         <div className="mt-4 p-3 bg-accent/50 rounded-lg">
           <p className="text-xs text-muted-foreground">
-            💡 Astuce : Appuyez sur <kbd className="px-1.5 py-0.5 text-xs bg-muted border border-border rounded">?</kbd> à tout moment pour afficher cette aide
+            💡 Astuce : Appuyez sur{' '}
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted border border-border rounded">
+              ?
+            </kbd>{' '}
+            à tout moment pour afficher cette aide
           </p>
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

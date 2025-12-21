@@ -1,16 +1,16 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import { ThemeProvider } from "next-themes";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Layout } from "@/components/Layout";
+import { ThemeProvider } from 'next-themes'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { Toaster } from '@/components/ui/toaster'
+import { Toaster as Sonner } from '@/components/ui/sonner'
+import { Layout } from '@/components/Layout'
 
 import appCss from '../styles.css?url'
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 export const Route = createRootRoute({
   head: () => ({
@@ -49,9 +49,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <Layout>
-                {children}
-              </Layout>
+              <Layout>{children}</Layout>
             </TooltipProvider>
           </ThemeProvider>
         </QueryClientProvider>

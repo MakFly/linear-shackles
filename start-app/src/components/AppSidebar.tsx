@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react'
 import {
   LayoutDashboard,
   ListTodo,
@@ -16,10 +16,10 @@ import {
   Wrench,
   ChevronRight,
   Database,
-} from "lucide-react";
-import { useRouterState } from "@tanstack/react-router";
-import { useTheme } from "next-themes";
-import { NavLink } from "@/components/NavLink";
+} from 'lucide-react'
+import { useRouterState } from '@tanstack/react-router'
+import { useTheme } from 'next-themes'
+import { NavLink } from '@/components/NavLink'
 import {
   Sidebar,
   SidebarContent,
@@ -34,59 +34,61 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/collapsible'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 const mainNav = [
-  { title: "Overview", url: "/", icon: LayoutDashboard },
-  { title: "Issues", url: "/issues", icon: ListTodo, badge: "18" },
-  { title: "Updates", url: "/updates", icon: FileText, badge: "3" },
-];
+  { title: 'Overview', url: '/', icon: LayoutDashboard },
+  { title: 'Issues', url: '/issues', icon: ListTodo, badge: '18' },
+  { title: 'Updates', url: '/updates', icon: FileText, badge: '3' },
+]
 
 const providersNav = [
-  { title: "GitHub", url: "/provider/github", icon: Github },
-  { title: "GitLab", url: "/provider/gitlab", icon: Gitlab },
-];
+  { title: 'GitHub', url: '/provider/github', icon: Github },
+  { title: 'GitLab', url: '/provider/gitlab', icon: Gitlab },
+]
 
 const workspaceNav = [
-  { title: "Projets", url: "/projects", icon: FolderKanban },
-  { title: "Sprints", url: "/sprints", icon: Calendar },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Équipe", url: "/team", icon: Users },
-];
+  { title: 'Projets', url: '/projects', icon: FolderKanban },
+  { title: 'Sprints', url: '/sprints', icon: Calendar },
+  { title: 'Analytics', url: '/analytics', icon: BarChart3 },
+  { title: 'Équipe', url: '/team', icon: Users },
+]
 
 const devToolsNav = [
-  { title: "Overview", url: "/dev-tools", icon: LayoutDashboard },
-  { title: "Issues", url: "/dev-tools/issues", icon: ListTodo },
-  { title: "Updates", url: "/dev-tools/updates", icon: FileText },
-  { title: "Projets", url: "/dev-tools/projects", icon: FolderKanban },
-  { title: "Sprints", url: "/dev-tools/sprints", icon: Calendar },
-  { title: "Analytics", url: "/dev-tools/analytics", icon: BarChart3 },
-  { title: "Équipe", url: "/dev-tools/team", icon: Users },
-];
+  { title: 'Overview', url: '/dev-tools', icon: LayoutDashboard },
+  { title: 'Issues', url: '/dev-tools/issues', icon: ListTodo },
+  { title: 'Updates', url: '/dev-tools/updates', icon: FileText },
+  { title: 'Projets', url: '/dev-tools/projects', icon: FolderKanban },
+  { title: 'Sprints', url: '/dev-tools/sprints', icon: Calendar },
+  { title: 'Analytics', url: '/dev-tools/analytics', icon: BarChart3 },
+  { title: 'Équipe', url: '/dev-tools/team', icon: Users },
+]
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouterState();
-  const location = { pathname: router.location.pathname };
-  const { theme, setTheme } = useTheme();
-  const [devToolsOpen, setDevToolsOpen] = React.useState(location.pathname.startsWith("/dev-tools"));
+  const router = useRouterState()
+  const location = { pathname: router.location.pathname }
+  const { theme, setTheme } = useTheme()
+  const [devToolsOpen, setDevToolsOpen] = React.useState(
+    location.pathname.startsWith('/dev-tools'),
+  )
 
   const isActive = (path: string) => {
-    if (path.startsWith("/provider")) {
-      return location.pathname.startsWith(path);
+    if (path.startsWith('/provider')) {
+      return location.pathname.startsWith(path)
     }
-    if (path.startsWith("/dev-tools")) {
-      return location.pathname === path;
+    if (path.startsWith('/dev-tools')) {
+      return location.pathname === path
     }
-    return location.pathname === path;
-  };
+    return location.pathname === path
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -96,8 +98,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             <Rocket className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold leading-tight text-sidebar-foreground">Vol Tracker</span>
-            <span className="text-xs text-sidebar-foreground/60">Issue Management</span>
+            <span className="font-semibold leading-tight text-sidebar-foreground">
+              Vol Tracker
+            </span>
+            <span className="text-xs text-sidebar-foreground/60">
+              Issue Management
+            </span>
           </div>
         </div>
       </SidebarHeader>
@@ -110,7 +116,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
                     <NavLink
                       to={item.url}
                       end
@@ -143,7 +153,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {providersNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
                     <NavLink
                       to={item.url}
                       className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
@@ -167,7 +181,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {workspaceNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={isActive(item.url)}
+                  >
                     <NavLink
                       to={item.url}
                       className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
@@ -189,17 +207,24 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <Collapsible open={devToolsOpen} onOpenChange={setDevToolsOpen} className="group/collapsible">
+              <Collapsible
+                open={devToolsOpen}
+                onOpenChange={setDevToolsOpen}
+                className="group/collapsible"
+              >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton 
-                      tooltip="Dev Tools" 
-                      isActive={location.pathname.startsWith("/dev-tools")}
+                    <SidebarMenuButton
+                      tooltip="Dev Tools"
+                      isActive={location.pathname.startsWith('/dev-tools')}
                       className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent data-[state=open]:bg-sidebar-accent"
                     >
                       <Database className="h-4 w-4 shrink-0 text-emerald-500" />
                       <span className="flex-1">Database Routes</span>
-                      <Badge variant="outline" className="h-5 px-1.5 text-xs bg-emerald-500/15 text-emerald-500 border-emerald-500/20">
+                      <Badge
+                        variant="outline"
+                        className="h-5 px-1.5 text-xs bg-emerald-500/15 text-emerald-500 border-emerald-500/20"
+                      >
                         DB
                       </Badge>
                       <ChevronRight className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -209,10 +234,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuSub>
                       {devToolsNav.map((item) => (
                         <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild isActive={isActive(item.url)}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={isActive(item.url)}
+                          >
                             <NavLink
                               to={item.url}
-                              end={item.url === "/dev-tools"}
+                              end={item.url === '/dev-tools'}
                               className="flex items-center gap-2"
                               activeClassName="text-emerald-500 font-medium"
                             >
@@ -238,19 +266,29 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </Button>
         </div>
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9 ring-2 ring-primary/20">
             <AvatarImage src="" alt="User" />
-            <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">PM</AvatarFallback>
+            <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
+              PM
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-medium text-sidebar-foreground">Paul de Marecaux</p>
-            <p className="truncate text-xs text-sidebar-foreground/60">paul@example.com</p>
+            <p className="truncate text-sm font-medium text-sidebar-foreground">
+              Paul de Marecaux
+            </p>
+            <p className="truncate text-xs text-sidebar-foreground/60">
+              paul@example.com
+            </p>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
             <NavLink to="/settings">
@@ -260,5 +298,5 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

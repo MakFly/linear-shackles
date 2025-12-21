@@ -36,7 +36,7 @@ export {
 } from './team'
 
 // Updates
-export { getUpdates, createUpdate } from './updates'
+export { getUpdates, createUpdate, getUpdatesByIssueId } from './updates'
 
 // Relationships
 export { getIssueRelationships } from './relationships'

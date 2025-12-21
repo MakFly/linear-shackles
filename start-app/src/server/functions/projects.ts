@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { db, projects } from '@/db'
 import { eq, desc } from 'drizzle-orm'
-import type { Project, NewProject } from '@/db/schema'
+import type { Project, NewProject, ProviderProjectInput } from '@/db/schema'
 
 export const getProjects = createServerFn({ method: 'GET' }).handler(
   async () => {
@@ -56,17 +56,23 @@ export const deleteProject = createServerFn({ method: 'POST' })
 export const findOrCreateProjectByProvider = createServerFn({
   method: 'POST',
 })
-  .inputValidator(
-    (data: {
-      provider: 'github' | 'gitlab'
-      providerId: string
-      name?: string
-      description?: string
-    }) => data,
-  )
+  .inputValidator((input: unknown) => {
+    const data = input as ProviderProjectInput
+
+    // Validation runtime explicite
+    if (!data || typeof data !== 'object') {
+      throw new Error(`Invalid input: data is required, got: ${typeof data}`)
+    }
+    if (!data.provider || !['github', 'gitlab'].includes(data.provider)) {
+      throw new Error('Invalid input: provider must be "github" or "gitlab"')
+    }
+    if (!data.providerId || typeof data.providerId !== 'string') {
+      throw new Error('Invalid input: providerId is required')
+    }
+    return data
+  })
   .handler(async ({ data }) => {
-    // Chercher un projet existant avec ce providerId dans la description ou le nom
-    // Format: "provider:github:owner/repo" ou "provider:gitlab:projectId"
+    // Chercher un projet existant avec ce providerId
     const providerPrefix = `provider:${data.provider}:${data.providerId}`
 
     const allProjects = await db.select().from(projects)
@@ -91,10 +97,8 @@ export const findOrCreateProjectByProvider = createServerFn({
       ? `${data.description}\n\n${providerPrefix}`
       : providerPrefix
 
-    // Generer un UUID simple
-    const generateId = () => {
-      return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
-    }
+    const generateId = () =>
+      `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
 
     const now = new Date().toISOString()
     const newProject = await db
