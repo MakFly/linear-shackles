@@ -61,7 +61,8 @@ function Component() {
       gitlab.token &&
       (!gitlab.isConnected || gitlab.projectId !== projectId)
     ) {
-      gitlab.connect(gitlab.token, projectId)
+      // Conserver l'URL GitLab actuelle lors de la reconnexion
+      gitlab.connect(gitlab.token, projectId, gitlab.gitlabUrl)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, gitlab.token, gitlab.isConnected, gitlab.projectId])
@@ -76,10 +77,11 @@ function Component() {
     createIssue,
   } = gitlab
 
-  const [issues, setIssues] = useState<GitLabIssue[]>([])
-  const [mergeRequests, setMergeRequests] = useState<GitLabMergeRequest[]>([])
-  const [branches, setBranches] = useState<GitLabBranch[]>([])
-  const [pipelines, setPipelines] = useState<GitLabPipeline[]>([])
+  const [issues, setIssues] = useState<Array<GitLabIssue>>([])
+  const [mergeRequests, setMergeRequests] = useState<Array<GitLabMergeRequest>>([])
+  const [branches, setBranches] = useState<Array<GitLabBranch>>([])
+  const [pipelines, setPipelines] = useState<Array<GitLabPipeline>>([])
+  const [pipelinesUnavailable, setPipelinesUnavailable] = useState(false)
 
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('issues')
@@ -94,28 +96,46 @@ function Component() {
     if (!isConnected) return
 
     setLoading(true)
-    try {
-      const [issuesData, mrsData, branchesData, pipelinesData] =
-        await Promise.all([
-          getIssues('all'),
-          getMergeRequests('all'),
-          getBranches(),
-          getPipelines(),
-        ])
+    setPipelinesUnavailable(false)
 
-      setIssues(issuesData)
-      setMergeRequests(mrsData)
-      setBranches(branchesData)
-      setPipelines(pipelinesData)
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
+    // Charger chaque ressource indépendamment pour éviter qu'une erreur bloque tout
+    const results = await Promise.allSettled([
+      getIssues('all'),
+      getMergeRequests('all'),
+      getBranches(),
+      getPipelines(),
+    ])
+
+    // Issues
+    if (results[0].status === 'fulfilled') {
+      setIssues(results[0].value)
+    } else {
+      console.error('Erreur issues:', results[0].reason)
     }
+
+    // Merge Requests
+    if (results[1].status === 'fulfilled') {
+      setMergeRequests(results[1].value)
+    } else {
+      console.error('Erreur MRs:', results[1].reason)
+    }
+
+    // Branches
+    if (results[2].status === 'fulfilled') {
+      setBranches(results[2].value)
+    } else {
+      console.error('Erreur branches:', results[2].reason)
+    }
+
+    // Pipelines (peut être 403 si CI/CD non activé)
+    if (results[3].status === 'fulfilled') {
+      setPipelines(results[3].value)
+    } else {
+      setPipelinesUnavailable(true)
+      console.error('Erreur pipelines:', results[3].reason)
+    }
+
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -301,7 +321,9 @@ function Component() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {pipelines.filter((p) => p.status === 'running').length} actifs
+                {pipelinesUnavailable
+                  ? 'N/A'
+                  : `${pipelines.filter((p) => p.status === 'running').length} actifs`}
               </div>
             </CardContent>
           </Card>
@@ -503,59 +525,87 @@ function Component() {
           </TabsContent>
 
           <TabsContent value="pipelines" className="space-y-4">
-            {loading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <Card key={i}>
-                    <CardContent className="p-6">
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </CardContent>
-                  </Card>
-                ))
-              : pipelines.map((pipeline) => (
-                  <Card
-                    key={pipeline.id}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2">
-                            {getPipelineIcon(pipeline.status)}
-                            <h3 className="font-semibold">
-                              {pipeline.name || `Pipeline #${pipeline.iid}`}
-                            </h3>
-                            <Badge variant="outline">{pipeline.status}</Badge>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <GitBranch className="h-3 w-3" />
-                              {pipeline.ref}
-                            </span>
-                            <span>{pipeline.source}</span>
-                            <span>
-                              {new Date(pipeline.created_at).toLocaleDateString(
-                                'fr-FR',
-                              )}
-                            </span>
-                            {pipeline.duration && (
-                              <span>{Math.round(pipeline.duration)}s</span>
-                            )}
-                          </div>
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : pipelinesUnavailable ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    Pipelines non disponibles
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Les pipelines CI/CD ne sont pas accessibles pour ce projet.
+                    Cela peut être dû à une désactivation du CI/CD ou à des
+                    permissions insuffisantes.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : pipelines.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <PlayCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    Aucun pipeline
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Aucun pipeline n'a encore été exécuté sur ce projet.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              pipelines.map((pipeline) => (
+                <Card
+                  key={pipeline.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          {getPipelineIcon(pipeline.status)}
+                          <h3 className="font-semibold">
+                            {pipeline.name || `Pipeline #${pipeline.iid}`}
+                          </h3>
+                          <Badge variant="outline">{pipeline.status}</Badge>
                         </div>
-                        <Button variant="ghost" size="icon" asChild>
-                          <a
-                            href={pipeline.web_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </Button>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <GitBranch className="h-3 w-3" />
+                            {pipeline.ref}
+                          </span>
+                          <span>{pipeline.source}</span>
+                          <span>
+                            {new Date(pipeline.created_at).toLocaleDateString(
+                              'fr-FR',
+                            )}
+                          </span>
+                          {pipeline.duration && (
+                            <span>{Math.round(pipeline.duration)}s</span>
+                          )}
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      <Button variant="ghost" size="icon" asChild>
+                        <a
+                          href={pipeline.web_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="branches" className="space-y-4">

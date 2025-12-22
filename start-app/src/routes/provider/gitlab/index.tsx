@@ -44,7 +44,8 @@ function Component() {
   const { toast } = useToast()
   const [showSettings, setShowSettings] = useState(!provider.isConnected)
   const [tokenInput, setTokenInput] = useState('')
-  const [repositories, setRepositories] = useState<GitRepository[]>([])
+  const [urlInput, setUrlInput] = useState(provider.baseUrl || 'https://gitlab.tilvest.com')
+  const [repositories, setRepositories] = useState<Array<GitRepository>>([])
   const [loading, setLoading] = useState(false)
 
   const loadRepositories = async () => {
@@ -81,8 +82,16 @@ function Component() {
       })
       return
     }
+    if (!urlInput) {
+      toast({
+        title: 'Erreur',
+        description: 'URL GitLab requise',
+        variant: 'destructive',
+      })
+      return
+    }
     // On connecte sans projet spécifique pour pouvoir lister les projets
-    provider.connect(tokenInput)
+    provider.connect(tokenInput, undefined, urlInput)
     // Recharger après connexion
     setTimeout(() => {
       loadRepositories()
@@ -189,6 +198,20 @@ function Component() {
             </Alert>
 
             <div className="space-y-2">
+              <Label htmlFor="url">URL GitLab</Label>
+              <Input
+                id="url"
+                type="url"
+                placeholder="https://gitlab.tilvest.com"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground">
+                URL de votre instance GitLab (par défaut : gitlab.tilvest.com)
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="token">GitLab Personal Access Token</Label>
               <Input
                 id="token"
@@ -200,7 +223,7 @@ function Component() {
               <p className="text-sm text-muted-foreground">
                 Créez un token sur{' '}
                 <a
-                  href="https://gitlab.com/-/user_settings/personal_access_tokens"
+                  href={`${urlInput.replace(/\/$/, '')}/-/user_settings/personal_access_tokens`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
@@ -239,6 +262,19 @@ function Component() {
               Sélectionnez un projet pour voir ses issues, merge requests et
               pipelines
             </p>
+            {provider.baseUrl && provider.baseUrl !== 'https://gitlab.com' && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Instance :{' '}
+                <a
+                  href={provider.baseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-primary hover:underline"
+                >
+                  {provider.baseUrl}
+                </a>
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <Button

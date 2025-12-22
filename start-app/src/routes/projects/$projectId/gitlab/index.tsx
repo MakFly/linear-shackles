@@ -57,38 +57,42 @@ function ProjectGitLab() {
   // Connecter automatiquement si on a un token
   useEffect(() => {
     if (providerInfo && gitlab.token && (!gitlab.isConnected || gitlab.projectId !== providerInfo)) {
-      gitlab.connect(gitlab.token, providerInfo)
+      gitlab.connect(gitlab.token, providerInfo, gitlab.gitlabUrl)
     }
   }, [providerInfo, gitlab.token, gitlab.isConnected, gitlab.projectId, gitlab])
 
   const { isConnected, projectId: currentProjectId, getIssues, getMergeRequests, getBranches, getPipelines } = gitlab
 
-  const [issues, setIssues] = useState<GitLabIssue[]>([])
-  const [mergeRequests, setMergeRequests] = useState<GitLabMergeRequest[]>([])
-  const [branches, setBranches] = useState<GitLabBranch[]>([])
-  const [pipelines, setPipelines] = useState<GitLabPipeline[]>([])
+  const [issues, setIssues] = useState<Array<GitLabIssue>>([])
+  const [mergeRequests, setMergeRequests] = useState<Array<GitLabMergeRequest>>([])
+  const [branches, setBranches] = useState<Array<GitLabBranch>>([])
+  const [pipelines, setPipelines] = useState<Array<GitLabPipeline>>([])
+  const [pipelinesUnavailable, setPipelinesUnavailable] = useState(false)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('issues')
 
   const loadData = async () => {
     if (!isConnected) return
     setLoading(true)
-    try {
-      const [issuesData, mrsData, branchesData, pipelinesData] = await Promise.all([
-        getIssues('all'),
-        getMergeRequests('all'),
-        getBranches(),
-        getPipelines(),
-      ])
-      setIssues(issuesData)
-      setMergeRequests(mrsData)
-      setBranches(branchesData)
-      setPipelines(pipelinesData)
-    } catch (error: unknown) {
-      toast.error(`Erreur: ${(error as Error).message}`)
-    } finally {
-      setLoading(false)
+    setPipelinesUnavailable(false)
+
+    const results = await Promise.allSettled([
+      getIssues('all'),
+      getMergeRequests('all'),
+      getBranches(),
+      getPipelines(),
+    ])
+
+    if (results[0].status === 'fulfilled') setIssues(results[0].value)
+    if (results[1].status === 'fulfilled') setMergeRequests(results[1].value)
+    if (results[2].status === 'fulfilled') setBranches(results[2].value)
+    if (results[3].status === 'fulfilled') {
+      setPipelines(results[3].value)
+    } else {
+      setPipelinesUnavailable(true)
     }
+
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -357,9 +361,25 @@ function ProjectGitLab() {
                   </CardContent>
                 </Card>
               ))
+            ) : pipelinesUnavailable ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Pipelines non disponibles</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Les pipelines CI/CD ne sont pas accessibles pour ce projet.
+                  </p>
+                </CardContent>
+              </Card>
             ) : pipelines.length === 0 ? (
               <Card>
-                <CardContent className="p-6 text-center text-muted-foreground">Aucun pipeline</CardContent>
+                <CardContent className="p-8 text-center">
+                  <PlayCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Aucun pipeline</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Aucun pipeline n'a encore été exécuté sur ce projet.
+                  </p>
+                </CardContent>
               </Card>
             ) : (
               pipelines.map((pipeline) => (

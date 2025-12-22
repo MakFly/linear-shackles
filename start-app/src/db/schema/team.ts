@@ -1,8 +1,19 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { relations } from 'drizzle-orm'
+
+// Teams table
+export const teams = sqliteTable('teams', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
 
 // Team members table
 export const teamMembers = sqliteTable('team_members', {
   id: text('id').primaryKey(),
+  teamId: text('team_id').references(() => teams.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   role: text('role', {
@@ -20,6 +31,20 @@ export const teamMembers = sqliteTable('team_members', {
   updatedAt: text('updated_at').notNull(),
 })
 
+// Relations
+export const teamsRelations = relations(teams, ({ many }) => ({
+  members: many(teamMembers),
+}))
+
+export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
+  team: one(teams, {
+    fields: [teamMembers.teamId],
+    references: [teams.id],
+  }),
+}))
+
 // Types
+export type Team = typeof teams.$inferSelect
+export type NewTeam = typeof teams.$inferInsert
 export type TeamMember = typeof teamMembers.$inferSelect
 export type NewTeamMember = typeof teamMembers.$inferInsert

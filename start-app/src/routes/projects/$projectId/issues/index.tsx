@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
 import { List, Columns, Calendar, Table2, Plus, Loader2, CircleDot, Trash2, Download } from 'lucide-react'
 import { DraggableIssueRow } from '@/features/issues/components/DraggableIssueRow'
@@ -114,7 +114,7 @@ function dbIssueToFrontend(dbIssue: any): IssueWithProvider {
 }
 
 function ProjectIssues() {
-  const { projectId } = useParams({ from: '/projects/$projectId/issues' })
+  const { projectId } = Route.useParams()
   const { project, dbIssues } = Route.useLoaderData()
 
   // Détecter le provider
@@ -192,7 +192,7 @@ function ProjectIssues() {
     if (provider === 'github' && providerId && github.token && !github.isConnected) {
       github.connect(github.token, providerId)
     } else if (provider === 'gitlab' && providerId && gitlab.token && !gitlab.isConnected) {
-      gitlab.connect(gitlab.token, providerId)
+      gitlab.connect(gitlab.token, providerId, gitlab.gitlabUrl)
     }
   }, [provider, providerId, github, gitlab])
 

@@ -18,9 +18,10 @@ export interface GitProviderActions {
   isConnected: boolean
   token: string
   repositoryId: string
-  connect: (token: string, repositoryId?: string) => void
+  baseUrl?: string
+  connect: (token: string, repositoryId?: string, baseUrl?: string) => void
   disconnect: () => void
-  getRepositories: () => Promise<GitRepository[]>
+  getRepositories: () => Promise<Array<GitRepository>>
 }
 
 export const useGitProvider = (provider: GitProvider): GitProviderActions => {
@@ -53,6 +54,7 @@ export const useGitProvider = (provider: GitProvider): GitProviderActions => {
       isConnected: gitlab.isConnected,
       token: gitlab.token,
       repositoryId: gitlab.projectId,
+      baseUrl: gitlab.gitlabUrl,
       connect: gitlab.connect,
       disconnect: gitlab.disconnect,
       getRepositories: async () => {

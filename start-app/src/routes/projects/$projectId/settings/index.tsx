@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useMemo, useState, useEffect } from 'react'
 import {
   Card,
@@ -45,7 +45,7 @@ export const Route = createFileRoute('/projects/$projectId/settings/')({
 })
 
 function ProjectSettings() {
-  const { projectId } = useParams({ from: '/projects/$projectId/settings' })
+  const { projectId } = Route.useParams()
   const { project } = Route.useLoaderData()
   const router = useRouter()
 

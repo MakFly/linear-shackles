@@ -28,6 +28,12 @@ export {
 
 // Team
 export {
+  getTeams,
+  getTeamById,
+  getTeamWithMembers,
+  createTeam,
+  updateTeam,
+  deleteTeam,
   getTeamMembers,
   getTeamMemberById,
   createTeamMember,

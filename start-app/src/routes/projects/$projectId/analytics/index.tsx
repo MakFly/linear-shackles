@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -55,7 +55,7 @@ const stats: Array<{
 }> = []
 
 function ProjectAnalytics() {
-  const { projectId } = useParams({ from: '/projects/$projectId/analytics' })
+  const { projectId } = Route.useParams()
 
   return (
     <div className="flex-1 overflow-y-auto p-6 scrollbar-custom">

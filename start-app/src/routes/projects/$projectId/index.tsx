@@ -1,7 +1,6 @@
 import {
   createFileRoute,
   Outlet,
-  useParams,
   Link,
   useRouterState,
 } from '@tanstack/react-router'
@@ -55,7 +54,7 @@ export const Route = createFileRoute('/projects/$projectId/')({
 })
 
 function ProjectLayout() {
-  const { projectId } = useParams({ from: '/projects/$projectId' })
+  const { projectId } = Route.useParams()
   const { project, issues, updates } = Route.useLoaderData()
   const router = useRouterState()
   const currentPath = router.location.pathname

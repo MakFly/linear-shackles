@@ -8,16 +8,49 @@ import type {
   GitLabPipeline,
 } from '@/types/gitlab'
 
-const GITLAB_API_BASE = 'https://gitlab.com/api/v4'
+const DEFAULT_GITLAB_URL = 'https://gitlab.tilvest.com'
 
-const normalizeProjectId = (projectInput: string): string => {
+const normalizeGitLabUrl = (url: string): string => {
+  // Supprimer le trailing slash et /api/v4 s'il est présent
+  let normalized = url.trim().replace(/\/+$/, '')
+  normalized = normalized.replace(/\/api\/v4\/?$/, '')
+  // S'assurer que l'URL commence par http(s)://
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://${normalized}`
+  }
+  return normalized
+}
+
+const normalizeProjectId = (
+  projectInput: string,
+  gitlabUrl: string,
+): string => {
+  // Extraire le hostname de l'URL GitLab configurée
+  let hostname: string
+  try {
+    hostname = new URL(gitlabUrl).hostname
+  } catch {
+    hostname = 'gitlab.com'
+  }
+
   // Si c'est une URL GitLab complète, extraire project_id ou path
-  const gitlabUrlMatch = projectInput.match(
-    /gitlab\.com[/:]([^/]+)\/([^/]+?)(?:\.git|\/|$)/,
+  // Support pour n'importe quel domaine GitLab
+  const gitlabUrlRegex = new RegExp(
+    `${hostname.replace(/\./g, '\\.')}[/:]([^/]+)\\/([^/]+?)(?:\\.git|\\/|$)`,
   )
+  const gitlabUrlMatch = projectInput.match(gitlabUrlRegex)
   if (gitlabUrlMatch) {
     return `${gitlabUrlMatch[1]}/${gitlabUrlMatch[2]}`
   }
+
+  // Fallback: essayer avec un pattern générique pour les URLs Git
+  const genericUrlMatch = projectInput.match(
+    /(?:https?:\/\/[^/]+)[/:]([^/]+)\/([^/]+?)(?:\.git|\/|$)/,
+  )
+  if (genericUrlMatch) {
+    return `${genericUrlMatch[1]}/${genericUrlMatch[2]}`
+  }
+
   // Si c'est un ID numérique, retourner tel quel
   if (/^\d+$/.test(projectInput.trim())) {
     return projectInput.trim()
@@ -29,15 +62,26 @@ const normalizeProjectId = (projectInput: string): string => {
 export const useGitLab = () => {
   const [token, setToken] = useState<string>('')
   const [projectId, setProjectId] = useState<string>('')
+  const [gitlabUrl, setGitlabUrl] = useState<string>(DEFAULT_GITLAB_URL)
   const [isConnected, setIsConnected] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
     const savedToken = localStorage.getItem('gitlab_token')
     const savedProjectId = localStorage.getItem('gitlab_project_id')
+    const savedUrl = localStorage.getItem('gitlab_url')
+
+    if (savedUrl) {
+      const normalizedUrl = normalizeGitLabUrl(savedUrl)
+      setGitlabUrl(normalizedUrl)
+    }
+
     if (savedToken) setToken(savedToken)
     if (savedProjectId) {
-      const normalizedProjectId = normalizeProjectId(savedProjectId)
+      const currentUrl = savedUrl
+        ? normalizeGitLabUrl(savedUrl)
+        : DEFAULT_GITLAB_URL
+      const normalizedProjectId = normalizeProjectId(savedProjectId, currentUrl)
       setProjectId(normalizedProjectId)
       if (normalizedProjectId !== savedProjectId) {
         localStorage.setItem('gitlab_project_id', normalizedProjectId)
@@ -47,13 +91,20 @@ export const useGitLab = () => {
     if (savedToken) setIsConnected(true)
   }, [])
 
-  const connect = (newToken: string, newProjectId?: string) => {
+  const connect = (
+    newToken: string,
+    newProjectId?: string,
+    newUrl?: string,
+  ) => {
+    const url = newUrl ? normalizeGitLabUrl(newUrl) : gitlabUrl
     localStorage.setItem('gitlab_token', newToken)
+    localStorage.setItem('gitlab_url', url)
     setToken(newToken)
+    setGitlabUrl(url)
     setIsConnected(true)
 
     if (newProjectId) {
-      const normalizedProjectId = normalizeProjectId(newProjectId)
+      const normalizedProjectId = normalizeProjectId(newProjectId, url)
       localStorage.setItem('gitlab_project_id', normalizedProjectId)
       setProjectId(normalizedProjectId)
       toast({
@@ -63,7 +114,7 @@ export const useGitLab = () => {
     } else {
       toast({
         title: 'GitLab connecté',
-        description: 'Token configuré',
+        description: `Connecté à ${url}`,
       })
     }
   }
@@ -71,13 +122,17 @@ export const useGitLab = () => {
   const disconnect = () => {
     localStorage.removeItem('gitlab_token')
     localStorage.removeItem('gitlab_project_id')
+    localStorage.removeItem('gitlab_url')
     setToken('')
     setProjectId('')
+    setGitlabUrl(DEFAULT_GITLAB_URL)
     setIsConnected(false)
     toast({
       title: 'GitLab déconnecté',
     })
   }
+
+  const getApiBase = () => `${gitlabUrl}/api/v4`
 
   const makeRequest = async <T,>(endpoint: string): Promise<T> => {
     if (!token || !projectId) {
@@ -88,12 +143,13 @@ export const useGitLab = () => {
     const encodedProjectId = encodeURIComponent(projectId)
 
     const response = await fetch(
-      `${GITLAB_API_BASE}/projects/${encodedProjectId}${endpoint}`,
+      `${getApiBase()}/projects/${encodedProjectId}${endpoint}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        cache: 'no-store', // Éviter les 304 Not Modified
       },
     )
 
@@ -107,23 +163,25 @@ export const useGitLab = () => {
     return response.json()
   }
 
-  const getUserProjects = async (): Promise<GitLabProject[]> => {
+  const getUserProjects = async (): Promise<Array<GitLabProject>> => {
     if (!token) {
       throw new Error('GitLab not connected')
     }
 
-    const projects: GitLabProject[] = []
+    const projects: Array<GitLabProject> = []
     let page = 1
     const perPage = 100
 
     while (true) {
+      // Ne pas utiliser membership=true pour voir tous les projets accessibles (internal/public)
       const response = await fetch(
-        `${GITLAB_API_BASE}/projects?membership=true&per_page=${perPage}&page=${page}`,
+        `${getApiBase()}/projects?per_page=${perPage}&page=${page}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         },
       )
 
@@ -172,7 +230,7 @@ export const useGitLab = () => {
   const createIssue = async (
     title: string,
     description?: string,
-    labels?: string[],
+    labels?: Array<string>,
   ) => {
     if (!token || !projectId) throw new Error('GitLab not connected')
 
@@ -183,7 +241,7 @@ export const useGitLab = () => {
     if (labels && labels.length > 0) body.labels = labels.join(',')
 
     const response = await fetch(
-      `${GITLAB_API_BASE}/projects/${encodedProjectId}/issues`,
+      `${getApiBase()}/projects/${encodedProjectId}/issues`,
       {
         method: 'POST',
         headers: {
@@ -191,6 +249,7 @@ export const useGitLab = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
+        cache: 'no-store',
       },
     )
 
@@ -210,7 +269,7 @@ export const useGitLab = () => {
     const encodedProjectId = encodeURIComponent(projectId)
 
     const response = await fetch(
-      `${GITLAB_API_BASE}/projects/${encodedProjectId}/issues/${issueIid}`,
+      `${getApiBase()}/projects/${encodedProjectId}/issues/${issueIid}`,
       {
         method: 'PUT',
         headers: {
@@ -218,6 +277,7 @@ export const useGitLab = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ state_event: 'close' }),
+        cache: 'no-store',
       },
     )
 
@@ -235,6 +295,7 @@ export const useGitLab = () => {
     isConnected,
     token,
     projectId,
+    gitlabUrl,
     connect,
     disconnect,
     getUserProjects,
