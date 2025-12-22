@@ -10,7 +10,7 @@ import {
   IssueStatus,
   CustomField,
 } from '@/types/issue'
-import { CustomFieldEditor } from '@/components/CustomFieldEditor'
+import { CustomFieldEditor } from '@/features/issues/components/CustomFieldEditor'
 import {
   Dialog,
   DialogContent,

@@ -34,7 +34,7 @@ import type {
   GitHubWorkflowRun,
 } from '@/types/github'
 
-export const Route = createFileRoute('/projects/$projectId/github')({
+export const Route = createFileRoute('/projects/$projectId/github/')({
   component: ProjectGitHub,
   loader: async ({ params }) => {
     const project = await getProjectById({ data: params.projectId })

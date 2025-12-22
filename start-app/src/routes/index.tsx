@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
 import {
   Card,
   CardContent,
@@ -23,21 +22,25 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react'
-import { Issue, Sprint, IssueStatus, IssuePriority } from '@/types/issue'
+import { IssueStatus, IssuePriority } from '@/types/issue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { getAnalyticsData, getIssues } from '@/server/db'
 
 export const Route = createFileRoute('/')({
+  loader: async () => {
+    const [issues, analytics] = await Promise.all([
+      getIssues(),
+      getAnalyticsData(),
+    ])
+    return { issues, analytics }
+  },
   component: Component,
 })
 
-// Empty data - DB is empty, only dev-tools has mock data
-const mockIssues: Issue[] = []
-const mockSprints: Sprint[] = []
-
 function Component() {
-  const [issues] = useState<Issue[]>(mockIssues)
-  const [sprints] = useState<Sprint[]>(mockSprints)
+  const { issues, analytics } = Route.useLoaderData()
+  const { activeSprint, sprints } = analytics
 
   // Calculer les statistiques
   const getStatusCount = (status: IssueStatus) =>
@@ -51,28 +54,33 @@ function Component() {
   const progressIssues = getStatusCount('progress')
   const warningIssues = getStatusCount('warning')
   const backlogIssues = getStatusCount('backlog')
-  const completionRate = Math.round((doneIssues / totalIssues) * 100)
+  const completionRate =
+    totalIssues > 0 ? Math.round((doneIssues / totalIssues) * 100) : 0
 
   const urgentIssues = getPriorityCount('urgent')
   const highIssues = getPriorityCount('high')
 
   // Sprint actif
-  const activeSprint = sprints.find((s) => s.status === 'active')
   const activeSprintIssues = activeSprint
     ? issues.filter((i) => activeSprint.issues.includes(i.id))
     : []
   const activeSprintProgress = activeSprint
-    ? Math.round(
-        (activeSprintIssues.filter((i) => i.status === 'done').length /
-          activeSprintIssues.length) *
-          100,
-      )
+    ? activeSprintIssues.length > 0
+      ? Math.round(
+          (activeSprintIssues.filter((i) => i.status === 'done').length /
+            activeSprintIssues.length) *
+            100,
+        )
+      : 0
     : 0
 
   // Vélocité (issues terminés dans le sprint actif)
   const velocity = activeSprint
     ? activeSprintIssues.filter((i) => i.status === 'done').length
     : 0
+
+  const getStatusPercent = (count: number) =>
+    totalIssues > 0 ? Math.round((count / totalIssues) * 100) : 0
 
   return (
     <div className="flex-1 overflow-auto p-6 space-y-6 scrollbar-custom">
@@ -296,7 +304,7 @@ function Component() {
                   <div className="w-32 bg-secondary rounded-full h-2">
                     <div
                       className="bg-[hsl(var(--status-done))] h-2 rounded-full transition-all"
-                      style={{ width: `${(doneIssues / totalIssues) * 100}%` }}
+                      style={{ width: `${getStatusPercent(doneIssues)}%` }}
                     />
                   </div>
                 </div>
@@ -314,9 +322,7 @@ function Component() {
                   <div className="w-32 bg-secondary rounded-full h-2">
                     <div
                       className="bg-[hsl(var(--status-progress))] h-2 rounded-full transition-all"
-                      style={{
-                        width: `${(progressIssues / totalIssues) * 100}%`,
-                      }}
+                      style={{ width: `${getStatusPercent(progressIssues)}%` }}
                     />
                   </div>
                 </div>
@@ -334,9 +340,7 @@ function Component() {
                   <div className="w-32 bg-secondary rounded-full h-2">
                     <div
                       className="bg-[hsl(var(--status-warning))] h-2 rounded-full transition-all"
-                      style={{
-                        width: `${(warningIssues / totalIssues) * 100}%`,
-                      }}
+                      style={{ width: `${getStatusPercent(warningIssues)}%` }}
                     />
                   </div>
                 </div>
@@ -354,9 +358,7 @@ function Component() {
                   <div className="w-32 bg-secondary rounded-full h-2">
                     <div
                       className="bg-[hsl(var(--status-backlog))] h-2 rounded-full transition-all"
-                      style={{
-                        width: `${(backlogIssues / totalIssues) * 100}%`,
-                      }}
+                      style={{ width: `${getStatusPercent(backlogIssues)}%` }}
                     />
                   </div>
                 </div>

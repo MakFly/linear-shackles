@@ -23,7 +23,7 @@ import { getMockSprints, getMockIssues } from '@/server/dev-tools-mocks'
 import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/dev-tools/sprints')({
+export const Route = createFileRoute('/dev-tools/sprints/')({
   loader: async () => {
     const [sprints, issues] = await Promise.all([
       getMockSprints(),

@@ -3,15 +3,32 @@ import { db, sprints } from '@/db'
 import { eq, desc } from 'drizzle-orm'
 import type { Sprint, NewSprint } from '@/db/schema'
 
-export const getSprints = createServerFn({ method: 'GET' }).handler(
-  async () => {
+type CreateSprintInput = Omit<NewSprint, 'createdAt' | 'updatedAt'> & {
+  id?: string
+}
+
+type CreateSprintArgs = CreateSprintInput | { data: CreateSprintInput }
+
+const normalizeCreateInput = (input: CreateSprintArgs) => {
+  if (!input || typeof input !== 'object') {
+    throw new Error('Invalid input: sprint payload is required')
+  }
+  return 'data' in input ? input.data : input
+}
+
+const generateId = () => {
+  const cryptoApi = globalThis.crypto
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID()
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+export const getSprints = createServerFn({ method: 'GET' }).handler(async () => {
     const result = await db
       .select()
       .from(sprints)
       .orderBy(desc(sprints.createdAt))
     return result
-  },
-)
+})
 
 export const getSprintById = createServerFn({ method: 'GET' })
   .inputValidator((id: string) => id)
@@ -21,13 +38,28 @@ export const getSprintById = createServerFn({ method: 'GET' })
   })
 
 export const createSprint = createServerFn({ method: 'POST' })
-  .inputValidator((sprint: NewSprint) => sprint)
+  .inputValidator((sprint: CreateSprintArgs | undefined) => {
+    if (!sprint || typeof sprint !== 'object') {
+      throw new Error('Invalid input: sprint payload is required')
+    }
+    return sprint
+  })
   .handler(async ({ data: sprint }) => {
+    if (!sprint) {
+      throw new Error('Invalid input: sprint payload is required')
+    }
+    const payload = normalizeCreateInput(sprint)
+    if (!payload.name || !payload.startDate || !payload.endDate) {
+      throw new Error('Invalid input: name, startDate, endDate are required')
+    }
     const now = new Date().toISOString()
     const result = await db
       .insert(sprints)
       .values({
-        ...sprint,
+        ...payload,
+        id: payload.id ?? generateId(),
+        issues: payload.issues ?? [],
+        velocity: payload.velocity ?? 0,
         createdAt: now,
         updatedAt: now,
       })

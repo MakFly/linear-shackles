@@ -34,7 +34,7 @@ import { useMemo } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-export const Route = createFileRoute('/projects/$projectId')({
+export const Route = createFileRoute('/projects/$projectId/')({
   component: ProjectLayout,
   loader: async ({ params }) => {
     const [project, allIssues, allUpdates] = await Promise.all([

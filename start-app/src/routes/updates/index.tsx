@@ -36,7 +36,7 @@ import {
 } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-export const Route = createFileRoute('/updates')({
+export const Route = createFileRoute('/updates/')({
   component: Component,
 })
 

@@ -24,7 +24,7 @@ import { getMockTeamMembers } from '@/server/dev-tools-mocks'
 import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/dev-tools/team')({
+export const Route = createFileRoute('/dev-tools/team/')({
   loader: async () => {
     const members = await getMockTeamMembers()
     return { members }

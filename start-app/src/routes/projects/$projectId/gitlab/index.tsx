@@ -35,7 +35,7 @@ import type {
   GitLabPipeline,
 } from '@/types/gitlab'
 
-export const Route = createFileRoute('/projects/$projectId/gitlab')({
+export const Route = createFileRoute('/projects/$projectId/gitlab/')({
   component: ProjectGitLab,
   loader: async ({ params }) => {
     const project = await getProjectById({ data: params.projectId })

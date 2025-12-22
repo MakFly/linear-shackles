@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
-export const Route = createFileRoute('/settings')({
+export const Route = createFileRoute('/settings/')({
   component: Component,
 })
 

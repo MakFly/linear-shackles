@@ -12,16 +12,16 @@ import {
   Database,
   RefreshCw,
 } from 'lucide-react'
-import { DraggableIssueRow } from '@/components/DraggableIssueRow'
+import { DraggableIssueRow } from '@/features/issues/components/DraggableIssueRow'
 import { CommandPalette } from '@/components/CommandPalette'
-import { IssuesTableV2 } from '@/components/IssuesTableV2'
-import { IssueDetailModal } from '@/components/IssueDetailModal'
+import { IssuesTableV2 } from '@/features/issues/components/IssuesTableV2'
+import { IssueDetailModal } from '@/features/issues/components/IssueDetailModal'
 import { KeyboardShortcutsDialog } from '@/components/KeyboardShortcutsDialog'
-import { KanbanBoard } from '@/components/KanbanBoard'
-import { FilterPanel } from '@/components/FilterPanel'
-import { TemplateManager } from '@/components/TemplateManager'
-import { AutomationManager } from '@/components/AutomationManager'
-import { SprintManager } from '@/components/SprintManager'
+import { KanbanBoard } from '@/features/issues/components/KanbanBoard'
+import { FilterPanel } from '@/features/issues/components/FilterPanel'
+import { TemplateManager } from '@/features/issues/components/TemplateManager'
+import { AutomationManager } from '@/features/issues/components/AutomationManager'
+import { SprintManager } from '@/features/sprints/components/SprintManager'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type {
@@ -54,7 +54,7 @@ import { getMockIssues, getMockSprints } from '@/server/dev-tools-mocks'
 import { updateIssue } from '@/server/db'
 import { useRouter } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/dev-tools/issues')({
+export const Route = createFileRoute('/dev-tools/issues/')({
   loader: async () => {
     const [issues, sprints] = await Promise.all([
       getMockIssues(),

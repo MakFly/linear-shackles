@@ -32,7 +32,7 @@ import {
 } from 'lucide-react'
 import { getAnalyticsData } from '@/server/db'
 
-export const Route = createFileRoute('/analytics')({
+export const Route = createFileRoute('/analytics/')({
   loader: async () => {
     const data = await getAnalyticsData()
     return { data }

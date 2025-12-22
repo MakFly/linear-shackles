@@ -22,11 +22,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { getProjectById, updateProject, deleteProject } from '@/server/db'
 import { Github, Gitlab, CheckCircle2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/projects/$projectId/settings')({
+export const Route = createFileRoute('/projects/$projectId/settings/')({
   component: ProjectSettings,
   loader: async ({ params }) => {
     const project = await getProjectById({ data: params.projectId })
@@ -59,6 +69,7 @@ function ProjectSettings() {
   const [savingGeneral, setSavingGeneral] = useState(false)
   const [savingDates, setSavingDates] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Synchroniser les formulaires avec le projet
   useEffect(() => {
@@ -162,19 +173,17 @@ function ProjectSettings() {
     })
   }
 
-  const handleDeleteProject = async () => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.')) {
-      return
-    }
-
+  const executeDeleteProject = async () => {
     setDeleting(true)
     try {
-      await deleteProject(projectId)
+      await deleteProject({ data: projectId })
       toast.success('Projet supprimé')
       router.navigate({ to: '/projects' })
     } catch (error) {
       toast.error('Erreur lors de la suppression')
       setDeleting(false)
+    } finally {
+      setShowDeleteDialog(false)
     }
   }
 
@@ -474,7 +483,7 @@ function ProjectSettings() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={handleDeleteProject}
+                    onClick={() => setShowDeleteDialog(true)}
                     disabled={deleting}
                   >
                     {deleting && (
@@ -488,6 +497,23 @@ function ProjectSettings() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce projet ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Toutes les données associées à ce projet seront définitivement supprimées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={executeDeleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

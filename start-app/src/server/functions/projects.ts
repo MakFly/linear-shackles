@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { db, projects } from '@/db'
+import { db, projects, issues } from '@/db'
 import { eq, desc } from 'drizzle-orm'
 import type { Project, NewProject, ProviderProjectInput } from '@/db/schema'
 
@@ -49,6 +49,9 @@ export const updateProject = createServerFn({ method: 'POST' })
 export const deleteProject = createServerFn({ method: 'POST' })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
+    // Supprimer d'abord les issues liées au projet
+    await db.delete(issues).where(eq(issues.projectId, id))
+    // Puis supprimer le projet
     await db.delete(projects).where(eq(projects.id, id))
     return { success: true }
   })

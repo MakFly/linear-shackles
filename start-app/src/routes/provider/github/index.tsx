@@ -258,7 +258,13 @@ function Component() {
             >
               <Settings className="h-4 w-4" />
             </Button>
-            <Button variant="destructive" onClick={provider.disconnect}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                provider.disconnect()
+                window.location.reload()
+              }}
+            >
               Déconnecter
             </Button>
           </div>

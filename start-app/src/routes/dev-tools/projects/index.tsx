@@ -28,7 +28,7 @@ import { getMockProjects } from '@/server/dev-tools-mocks'
 import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/dev-tools/projects')({
+export const Route = createFileRoute('/dev-tools/projects/')({
   loader: async () => {
     const projects = await getMockProjects()
     return { projects }

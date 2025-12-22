@@ -42,7 +42,7 @@ import {
 import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/dev-tools/analytics')({
+export const Route = createFileRoute('/dev-tools/analytics/')({
   loader: async () => {
     const [analytics, issues, sprints] = await Promise.all([
       getMockAnalyticsData(),

@@ -48,7 +48,7 @@ import type {
   GitHubWorkflowRun,
 } from '@/types/github'
 
-export const Route = createFileRoute('/github')({
+export const Route = createFileRoute('/github/')({
   component: Component,
 })
 

@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils'
 
 import { Issue, IssueRelationship, RelationType, Sprint } from '@/types/issue'
 import { Link2, Plus } from 'lucide-react'
-import { CustomFieldEditor } from '@/components/CustomFieldEditor'
+import { CustomFieldEditor } from '@/features/issues/components/CustomFieldEditor'
 import {
   Select,
   SelectContent,

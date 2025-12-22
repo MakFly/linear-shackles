@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -29,6 +29,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -41,17 +51,18 @@ import {
 } from '@/components/ui/select'
 import {
   getSprints,
+  getIssues,
   createSprint,
   updateSprint,
   deleteSprint,
 } from '@/server/db'
 import { toast } from 'sonner'
-import type { Sprint } from '@/db/schema'
+import type { Sprint, Issue } from '@/db/schema'
 
-export const Route = createFileRoute('/sprints')({
+export const Route = createFileRoute('/sprints/')({
   loader: async () => {
-    const sprints = await getSprints()
-    return { sprints }
+    const [sprints, issues] = await Promise.all([getSprints(), getIssues()])
+    return { sprints, issues }
   },
   component: Component,
 })
@@ -81,11 +92,12 @@ const statusConfig = {
 }
 
 function Component() {
-  const { sprints: initialSprints } = Route.useLoaderData()
+  const { sprints: initialSprints, issues } = Route.useLoaderData()
   const router = useRouter()
   const [sprints, setSprints] = useState<Sprint[]>(initialSprints)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null)
+  const [sprintToDelete, setSprintToDelete] = useState<Sprint | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     goal: '',
@@ -93,6 +105,10 @@ function Component() {
     endDate: '',
     status: 'planning' as 'planning' | 'active' | 'completed' | 'archived',
   })
+
+  useEffect(() => {
+    setSprints(initialSprints)
+  }, [initialSprints])
 
   const handleCreate = async () => {
     if (!formData.name.trim() || !formData.startDate || !formData.endDate) {
@@ -102,7 +118,6 @@ function Component() {
 
     try {
       const newSprint = await createSprint({
-        id: crypto.randomUUID(),
         name: formData.name,
         goal: formData.goal || null,
         startDate: formData.startDate,
@@ -110,8 +125,6 @@ function Component() {
         status: formData.status,
         issues: [],
         velocity: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       })
 
       setSprints([...sprints, newSprint])
@@ -170,12 +183,11 @@ function Component() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce sprint ?')) return
-
     try {
-      await deleteSprint(id)
+      await deleteSprint({ data: id })
       setSprints(sprints.filter((s) => s.id !== id))
       toast.success('Sprint supprimé')
+      setSprintToDelete(null)
       router.invalidate()
     } catch (error) {
       toast.error('Erreur lors de la suppression du sprint')
@@ -207,12 +219,18 @@ function Component() {
     })
   }
 
+  const getSprintIssues = (sprint: Sprint, allIssues: Issue[]) => {
+    const issueIds = new Set(sprint.issues)
+    if (issueIds.size === 0) return []
+    return allIssues.filter((issue) => issueIds.has(issue.id))
+  }
+
   const getProgress = (sprint: Sprint) => {
-    const issues = (sprint.issues as string[]) || []
-    if (issues.length === 0) return 0
-    // Pour l'instant, on retourne 0 car on n'a pas les issues complètes
-    // TODO: calculer le vrai progrès basé sur les issues complétées
-    return 0
+    const sprintIssues = getSprintIssues(sprint, issues)
+    if (sprintIssues.length === 0) return 0
+    const doneCount = sprintIssues.filter((issue) => issue.status === 'done')
+      .length
+    return Math.round((doneCount / sprintIssues.length) * 100)
   }
 
   const getDaysRemaining = (endDate: string) => {
@@ -431,7 +449,11 @@ function Component() {
               const StatusIcon = config.icon
               const progress = getProgress(sprint)
               const daysRemaining = getDaysRemaining(sprint.endDate)
-              const issues = (sprint.issues as string[]) || []
+              const sprintIssueIds = sprint.issues
+              const sprintIssues = getSprintIssues(sprint, issues)
+              const velocity = sprintIssues.filter(
+                (issue) => issue.status === 'done',
+              ).length
 
               return (
                 <Card
@@ -468,7 +490,7 @@ function Component() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(sprint.id)}
+                          onClick={() => setSprintToDelete(sprint)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -497,7 +519,7 @@ function Component() {
                       <div>
                         <div className="flex justify-between text-sm mb-2">
                           <span className="text-muted-foreground">
-                            {issues.length} issues
+                            {sprintIssueIds.length} issues
                           </span>
                           <span className="font-medium">{progress}%</span>
                         </div>
@@ -505,7 +527,7 @@ function Component() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Vélocité: {sprint.velocity || 0} pts</span>
+                          <span>Vélocité: {velocity} pts</span>
                         </div>
                         <div className="flex gap-2">
                           {sprint.status === 'planning' && (
@@ -527,6 +549,32 @@ function Component() {
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={!!sprintToDelete}
+        onOpenChange={(open) => !open && setSprintToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Cela supprimera définitivement le
+              sprint "{sprintToDelete?.name}" et toutes les données associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() =>
+                sprintToDelete && handleDelete(sprintToDelete.id)
+              }
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

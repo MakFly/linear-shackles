@@ -31,7 +31,7 @@ import {
   Target,
 } from 'lucide-react'
 
-export const Route = createFileRoute('/projects/$projectId/analytics')({
+export const Route = createFileRoute('/projects/$projectId/analytics/')({
   component: ProjectAnalytics,
 })
 

@@ -29,6 +29,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -113,9 +123,15 @@ function Component() {
   const [gitlabRepos, setGitlabRepos] = useState<GitRepository[]>([])
   const [selectedRepo, setSelectedRepo] = useState<string>('')
   const [loadingRepos, setLoadingRepos] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null)
 
   const github = useGitHub()
   const gitlab = useGitLab()
+
+  // Synchroniser le state avec les données du loader après invalidation
+  useEffect(() => {
+    setProjects(initialProjects)
+  }, [initialProjects])
 
   const loadGithubRepos = async () => {
     if (!github.isConnected || !github.token) {
@@ -319,13 +335,12 @@ function Component() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) return
-
+  const executeDelete = async (id: string) => {
     try {
-      await deleteProject(id)
+      await deleteProject({ data: id })
       setProjects(projects.filter((p) => p.id !== id))
       toast.success('Projet supprimé')
+      setProjectToDelete(null)
       router.invalidate()
     } catch (error) {
       toast.error('Erreur lors de la suppression du projet')
@@ -778,7 +793,7 @@ function Component() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onClick={() => handleDelete(project.id)}
+                          onClick={() => setProjectToDelete(project)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Supprimer
@@ -829,6 +844,30 @@ function Component() {
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={!!projectToDelete}
+        onOpenChange={(open) => !open && setProjectToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Cela supprimera définitivement le
+              projet "{projectToDelete?.name}" et toutes les données associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => projectToDelete && executeDelete(projectToDelete.id)}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

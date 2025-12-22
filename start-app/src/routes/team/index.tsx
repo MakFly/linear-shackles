@@ -54,7 +54,7 @@ import {
 import { toast } from 'sonner'
 import type { TeamMember } from '@/db/schema'
 
-export const Route = createFileRoute('/team')({
+export const Route = createFileRoute('/team/')({
   loader: async () => {
     const members = await getTeamMembers()
     return { members }

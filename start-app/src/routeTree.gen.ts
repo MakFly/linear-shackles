@@ -9,69 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UpdatesRouteImport } from './routes/updates'
-import { Route as TeamRouteImport } from './routes/team'
-import { Route as SprintsRouteImport } from './routes/sprints'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as IssuesRouteImport } from './routes/issues'
-import { Route as GithubRouteImport } from './routes/github'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UpdatesIndexRouteImport } from './routes/updates/index'
+import { Route as TeamIndexRouteImport } from './routes/team/index'
+import { Route as SprintsIndexRouteImport } from './routes/sprints/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
+import { Route as IssuesIndexRouteImport } from './routes/issues/index'
+import { Route as GithubIndexRouteImport } from './routes/github/index'
 import { Route as DevToolsIndexRouteImport } from './routes/dev-tools/index'
-import { Route as ProjectsProjectIdRouteImport } from './routes/projects/$projectId'
-import { Route as DevToolsUpdatesRouteImport } from './routes/dev-tools/updates'
-import { Route as DevToolsTeamRouteImport } from './routes/dev-tools/team'
-import { Route as DevToolsSprintsRouteImport } from './routes/dev-tools/sprints'
-import { Route as DevToolsProjectsRouteImport } from './routes/dev-tools/projects'
-import { Route as DevToolsIssuesRouteImport } from './routes/dev-tools/issues'
-import { Route as DevToolsAnalyticsRouteImport } from './routes/dev-tools/analytics'
+import { Route as AnalyticsIndexRouteImport } from './routes/analytics/index'
 import { Route as ProviderGitlabIndexRouteImport } from './routes/provider/gitlab/index'
 import { Route as ProviderGithubIndexRouteImport } from './routes/provider/github/index'
+import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects/$projectId/index'
+import { Route as DevToolsUpdatesIndexRouteImport } from './routes/dev-tools/updates/index'
+import { Route as DevToolsTeamIndexRouteImport } from './routes/dev-tools/team/index'
+import { Route as DevToolsSprintsIndexRouteImport } from './routes/dev-tools/sprints/index'
+import { Route as DevToolsProjectsIndexRouteImport } from './routes/dev-tools/projects/index'
+import { Route as DevToolsIssuesIndexRouteImport } from './routes/dev-tools/issues/index'
+import { Route as DevToolsAnalyticsIndexRouteImport } from './routes/dev-tools/analytics/index'
 import { Route as ProviderGitlabProjectIdRouteImport } from './routes/provider/gitlab/$projectId'
-import { Route as ProjectsProjectIdSettingsRouteImport } from './routes/projects/$projectId/settings'
-import { Route as ProjectsProjectIdIssuesRouteImport } from './routes/projects/$projectId/issues'
-import { Route as ProjectsProjectIdGitlabRouteImport } from './routes/projects/$projectId/gitlab'
-import { Route as ProjectsProjectIdGithubRouteImport } from './routes/projects/$projectId/github'
-import { Route as ProjectsProjectIdAnalyticsRouteImport } from './routes/projects/$projectId/analytics'
+import { Route as ProjectsProjectIdSettingsIndexRouteImport } from './routes/projects/$projectId/settings/index'
+import { Route as ProjectsProjectIdIssuesIndexRouteImport } from './routes/projects/$projectId/issues/index'
+import { Route as ProjectsProjectIdGitlabIndexRouteImport } from './routes/projects/$projectId/gitlab/index'
+import { Route as ProjectsProjectIdGithubIndexRouteImport } from './routes/projects/$projectId/github/index'
+import { Route as ProjectsProjectIdAnalyticsIndexRouteImport } from './routes/projects/$projectId/analytics/index'
 import { Route as ProviderGithubOwnerRepoRouteImport } from './routes/provider/github/$owner/$repo'
 
-const UpdatesRoute = UpdatesRouteImport.update({
-  id: '/updates',
-  path: '/updates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TeamRoute = TeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SprintsRoute = SprintsRouteImport.update({
-  id: '/sprints',
-  path: '/sprints',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IssuesRoute = IssuesRouteImport.update({
-  id: '/issues',
-  path: '/issues',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GithubRoute = GithubRouteImport.update({
-  id: '/github',
-  path: '/github',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
@@ -82,9 +47,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UpdatesIndexRoute = UpdatesIndexRouteImport.update({
+  id: '/updates/',
+  path: '/updates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamIndexRoute = TeamIndexRouteImport.update({
+  id: '/team/',
+  path: '/team/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SprintsIndexRoute = SprintsIndexRouteImport.update({
+  id: '/sprints/',
+  path: '/sprints/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IssuesIndexRoute = IssuesIndexRouteImport.update({
+  id: '/issues/',
+  path: '/issues/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GithubIndexRoute = GithubIndexRouteImport.update({
+  id: '/github/',
+  path: '/github/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevToolsIndexRoute = DevToolsIndexRouteImport.update({
@@ -92,39 +87,9 @@ const DevToolsIndexRoute = DevToolsIndexRouteImport.update({
   path: '/dev-tools/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
-  id: '/projects/$projectId',
-  path: '/projects/$projectId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevToolsUpdatesRoute = DevToolsUpdatesRouteImport.update({
-  id: '/dev-tools/updates',
-  path: '/dev-tools/updates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevToolsTeamRoute = DevToolsTeamRouteImport.update({
-  id: '/dev-tools/team',
-  path: '/dev-tools/team',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevToolsSprintsRoute = DevToolsSprintsRouteImport.update({
-  id: '/dev-tools/sprints',
-  path: '/dev-tools/sprints',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevToolsProjectsRoute = DevToolsProjectsRouteImport.update({
-  id: '/dev-tools/projects',
-  path: '/dev-tools/projects',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevToolsIssuesRoute = DevToolsIssuesRouteImport.update({
-  id: '/dev-tools/issues',
-  path: '/dev-tools/issues',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevToolsAnalyticsRoute = DevToolsAnalyticsRouteImport.update({
-  id: '/dev-tools/analytics',
-  path: '/dev-tools/analytics',
+const AnalyticsIndexRoute = AnalyticsIndexRouteImport.update({
+  id: '/analytics/',
+  path: '/analytics/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProviderGitlabIndexRoute = ProviderGitlabIndexRouteImport.update({
@@ -137,37 +102,75 @@ const ProviderGithubIndexRoute = ProviderGithubIndexRouteImport.update({
   path: '/provider/github/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
+  id: '/projects/$projectId/',
+  path: '/projects/$projectId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevToolsUpdatesIndexRoute = DevToolsUpdatesIndexRouteImport.update({
+  id: '/dev-tools/updates/',
+  path: '/dev-tools/updates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevToolsTeamIndexRoute = DevToolsTeamIndexRouteImport.update({
+  id: '/dev-tools/team/',
+  path: '/dev-tools/team/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevToolsSprintsIndexRoute = DevToolsSprintsIndexRouteImport.update({
+  id: '/dev-tools/sprints/',
+  path: '/dev-tools/sprints/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevToolsProjectsIndexRoute = DevToolsProjectsIndexRouteImport.update({
+  id: '/dev-tools/projects/',
+  path: '/dev-tools/projects/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevToolsIssuesIndexRoute = DevToolsIssuesIndexRouteImport.update({
+  id: '/dev-tools/issues/',
+  path: '/dev-tools/issues/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevToolsAnalyticsIndexRoute = DevToolsAnalyticsIndexRouteImport.update({
+  id: '/dev-tools/analytics/',
+  path: '/dev-tools/analytics/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProviderGitlabProjectIdRoute = ProviderGitlabProjectIdRouteImport.update({
   id: '/provider/gitlab/$projectId',
   path: '/provider/gitlab/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProjectsProjectIdSettingsRoute =
-  ProjectsProjectIdSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => ProjectsProjectIdRoute,
+const ProjectsProjectIdSettingsIndexRoute =
+  ProjectsProjectIdSettingsIndexRouteImport.update({
+    id: '/projects/$projectId/settings/',
+    path: '/projects/$projectId/settings/',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const ProjectsProjectIdIssuesRoute = ProjectsProjectIdIssuesRouteImport.update({
-  id: '/issues',
-  path: '/issues',
-  getParentRoute: () => ProjectsProjectIdRoute,
-} as any)
-const ProjectsProjectIdGitlabRoute = ProjectsProjectIdGitlabRouteImport.update({
-  id: '/gitlab',
-  path: '/gitlab',
-  getParentRoute: () => ProjectsProjectIdRoute,
-} as any)
-const ProjectsProjectIdGithubRoute = ProjectsProjectIdGithubRouteImport.update({
-  id: '/github',
-  path: '/github',
-  getParentRoute: () => ProjectsProjectIdRoute,
-} as any)
-const ProjectsProjectIdAnalyticsRoute =
-  ProjectsProjectIdAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => ProjectsProjectIdRoute,
+const ProjectsProjectIdIssuesIndexRoute =
+  ProjectsProjectIdIssuesIndexRouteImport.update({
+    id: '/projects/$projectId/issues/',
+    path: '/projects/$projectId/issues/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProjectsProjectIdGitlabIndexRoute =
+  ProjectsProjectIdGitlabIndexRouteImport.update({
+    id: '/projects/$projectId/gitlab/',
+    path: '/projects/$projectId/gitlab/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProjectsProjectIdGithubIndexRoute =
+  ProjectsProjectIdGithubIndexRouteImport.update({
+    id: '/projects/$projectId/github/',
+    path: '/projects/$projectId/github/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProjectsProjectIdAnalyticsIndexRoute =
+  ProjectsProjectIdAnalyticsIndexRouteImport.update({
+    id: '/projects/$projectId/analytics/',
+    path: '/projects/$projectId/analytics/',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ProviderGithubOwnerRepoRoute = ProviderGithubOwnerRepoRouteImport.update({
   id: '/provider/github/$owner/$repo',
@@ -178,90 +181,90 @@ const ProviderGithubOwnerRepoRoute = ProviderGithubOwnerRepoRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/analytics': typeof AnalyticsRoute
-  '/github': typeof GithubRoute
-  '/issues': typeof IssuesRoute
-  '/settings': typeof SettingsRoute
-  '/sprints': typeof SprintsRoute
-  '/team': typeof TeamRoute
-  '/updates': typeof UpdatesRoute
-  '/dev-tools/analytics': typeof DevToolsAnalyticsRoute
-  '/dev-tools/issues': typeof DevToolsIssuesRoute
-  '/dev-tools/projects': typeof DevToolsProjectsRoute
-  '/dev-tools/sprints': typeof DevToolsSprintsRoute
-  '/dev-tools/team': typeof DevToolsTeamRoute
-  '/dev-tools/updates': typeof DevToolsUpdatesRoute
-  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/analytics': typeof AnalyticsIndexRoute
   '/dev-tools': typeof DevToolsIndexRoute
+  '/github': typeof GithubIndexRoute
+  '/issues': typeof IssuesIndexRoute
   '/projects': typeof ProjectsIndexRoute
-  '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsRoute
-  '/projects/$projectId/github': typeof ProjectsProjectIdGithubRoute
-  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabRoute
-  '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesRoute
-  '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsRoute
+  '/settings': typeof SettingsIndexRoute
+  '/sprints': typeof SprintsIndexRoute
+  '/team': typeof TeamIndexRoute
+  '/updates': typeof UpdatesIndexRoute
   '/provider/gitlab/$projectId': typeof ProviderGitlabProjectIdRoute
+  '/dev-tools/analytics': typeof DevToolsAnalyticsIndexRoute
+  '/dev-tools/issues': typeof DevToolsIssuesIndexRoute
+  '/dev-tools/projects': typeof DevToolsProjectsIndexRoute
+  '/dev-tools/sprints': typeof DevToolsSprintsIndexRoute
+  '/dev-tools/team': typeof DevToolsTeamIndexRoute
+  '/dev-tools/updates': typeof DevToolsUpdatesIndexRoute
+  '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
   '/provider/github': typeof ProviderGithubIndexRoute
   '/provider/gitlab': typeof ProviderGitlabIndexRoute
   '/provider/github/$owner/$repo': typeof ProviderGithubOwnerRepoRoute
+  '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsIndexRoute
+  '/projects/$projectId/github': typeof ProjectsProjectIdGithubIndexRoute
+  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabIndexRoute
+  '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesIndexRoute
+  '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/analytics': typeof AnalyticsRoute
-  '/github': typeof GithubRoute
-  '/issues': typeof IssuesRoute
-  '/settings': typeof SettingsRoute
-  '/sprints': typeof SprintsRoute
-  '/team': typeof TeamRoute
-  '/updates': typeof UpdatesRoute
-  '/dev-tools/analytics': typeof DevToolsAnalyticsRoute
-  '/dev-tools/issues': typeof DevToolsIssuesRoute
-  '/dev-tools/projects': typeof DevToolsProjectsRoute
-  '/dev-tools/sprints': typeof DevToolsSprintsRoute
-  '/dev-tools/team': typeof DevToolsTeamRoute
-  '/dev-tools/updates': typeof DevToolsUpdatesRoute
-  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/analytics': typeof AnalyticsIndexRoute
   '/dev-tools': typeof DevToolsIndexRoute
+  '/github': typeof GithubIndexRoute
+  '/issues': typeof IssuesIndexRoute
   '/projects': typeof ProjectsIndexRoute
-  '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsRoute
-  '/projects/$projectId/github': typeof ProjectsProjectIdGithubRoute
-  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabRoute
-  '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesRoute
-  '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsRoute
+  '/settings': typeof SettingsIndexRoute
+  '/sprints': typeof SprintsIndexRoute
+  '/team': typeof TeamIndexRoute
+  '/updates': typeof UpdatesIndexRoute
   '/provider/gitlab/$projectId': typeof ProviderGitlabProjectIdRoute
+  '/dev-tools/analytics': typeof DevToolsAnalyticsIndexRoute
+  '/dev-tools/issues': typeof DevToolsIssuesIndexRoute
+  '/dev-tools/projects': typeof DevToolsProjectsIndexRoute
+  '/dev-tools/sprints': typeof DevToolsSprintsIndexRoute
+  '/dev-tools/team': typeof DevToolsTeamIndexRoute
+  '/dev-tools/updates': typeof DevToolsUpdatesIndexRoute
+  '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
   '/provider/github': typeof ProviderGithubIndexRoute
   '/provider/gitlab': typeof ProviderGitlabIndexRoute
   '/provider/github/$owner/$repo': typeof ProviderGithubOwnerRepoRoute
+  '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsIndexRoute
+  '/projects/$projectId/github': typeof ProjectsProjectIdGithubIndexRoute
+  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabIndexRoute
+  '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesIndexRoute
+  '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/analytics': typeof AnalyticsRoute
-  '/github': typeof GithubRoute
-  '/issues': typeof IssuesRoute
-  '/settings': typeof SettingsRoute
-  '/sprints': typeof SprintsRoute
-  '/team': typeof TeamRoute
-  '/updates': typeof UpdatesRoute
-  '/dev-tools/analytics': typeof DevToolsAnalyticsRoute
-  '/dev-tools/issues': typeof DevToolsIssuesRoute
-  '/dev-tools/projects': typeof DevToolsProjectsRoute
-  '/dev-tools/sprints': typeof DevToolsSprintsRoute
-  '/dev-tools/team': typeof DevToolsTeamRoute
-  '/dev-tools/updates': typeof DevToolsUpdatesRoute
-  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/analytics/': typeof AnalyticsIndexRoute
   '/dev-tools/': typeof DevToolsIndexRoute
+  '/github/': typeof GithubIndexRoute
+  '/issues/': typeof IssuesIndexRoute
   '/projects/': typeof ProjectsIndexRoute
-  '/projects/$projectId/analytics': typeof ProjectsProjectIdAnalyticsRoute
-  '/projects/$projectId/github': typeof ProjectsProjectIdGithubRoute
-  '/projects/$projectId/gitlab': typeof ProjectsProjectIdGitlabRoute
-  '/projects/$projectId/issues': typeof ProjectsProjectIdIssuesRoute
-  '/projects/$projectId/settings': typeof ProjectsProjectIdSettingsRoute
+  '/settings/': typeof SettingsIndexRoute
+  '/sprints/': typeof SprintsIndexRoute
+  '/team/': typeof TeamIndexRoute
+  '/updates/': typeof UpdatesIndexRoute
   '/provider/gitlab/$projectId': typeof ProviderGitlabProjectIdRoute
+  '/dev-tools/analytics/': typeof DevToolsAnalyticsIndexRoute
+  '/dev-tools/issues/': typeof DevToolsIssuesIndexRoute
+  '/dev-tools/projects/': typeof DevToolsProjectsIndexRoute
+  '/dev-tools/sprints/': typeof DevToolsSprintsIndexRoute
+  '/dev-tools/team/': typeof DevToolsTeamIndexRoute
+  '/dev-tools/updates/': typeof DevToolsUpdatesIndexRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
   '/provider/github/': typeof ProviderGithubIndexRoute
   '/provider/gitlab/': typeof ProviderGitlabIndexRoute
   '/provider/github/$owner/$repo': typeof ProviderGithubOwnerRepoRoute
+  '/projects/$projectId/analytics/': typeof ProjectsProjectIdAnalyticsIndexRoute
+  '/projects/$projectId/github/': typeof ProjectsProjectIdGithubIndexRoute
+  '/projects/$projectId/gitlab/': typeof ProjectsProjectIdGitlabIndexRoute
+  '/projects/$projectId/issues/': typeof ProjectsProjectIdIssuesIndexRoute
+  '/projects/$projectId/settings/': typeof ProjectsProjectIdSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -269,12 +272,15 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/analytics'
+    | '/dev-tools'
     | '/github'
     | '/issues'
+    | '/projects'
     | '/settings'
     | '/sprints'
     | '/team'
     | '/updates'
+    | '/provider/gitlab/$projectId'
     | '/dev-tools/analytics'
     | '/dev-tools/issues'
     | '/dev-tools/projects'
@@ -282,28 +288,28 @@ export interface FileRouteTypes {
     | '/dev-tools/team'
     | '/dev-tools/updates'
     | '/projects/$projectId'
-    | '/dev-tools'
-    | '/projects'
+    | '/provider/github'
+    | '/provider/gitlab'
+    | '/provider/github/$owner/$repo'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/github'
     | '/projects/$projectId/gitlab'
     | '/projects/$projectId/issues'
     | '/projects/$projectId/settings'
-    | '/provider/gitlab/$projectId'
-    | '/provider/github'
-    | '/provider/gitlab'
-    | '/provider/github/$owner/$repo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$'
     | '/analytics'
+    | '/dev-tools'
     | '/github'
     | '/issues'
+    | '/projects'
     | '/settings'
     | '/sprints'
     | '/team'
     | '/updates'
+    | '/provider/gitlab/$projectId'
     | '/dev-tools/analytics'
     | '/dev-tools/issues'
     | '/dev-tools/projects'
@@ -311,124 +317,77 @@ export interface FileRouteTypes {
     | '/dev-tools/team'
     | '/dev-tools/updates'
     | '/projects/$projectId'
-    | '/dev-tools'
-    | '/projects'
+    | '/provider/github'
+    | '/provider/gitlab'
+    | '/provider/github/$owner/$repo'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/github'
     | '/projects/$projectId/gitlab'
     | '/projects/$projectId/issues'
     | '/projects/$projectId/settings'
-    | '/provider/gitlab/$projectId'
-    | '/provider/github'
-    | '/provider/gitlab'
-    | '/provider/github/$owner/$repo'
   id:
     | '__root__'
     | '/'
     | '/$'
-    | '/analytics'
-    | '/github'
-    | '/issues'
-    | '/settings'
-    | '/sprints'
-    | '/team'
-    | '/updates'
-    | '/dev-tools/analytics'
-    | '/dev-tools/issues'
-    | '/dev-tools/projects'
-    | '/dev-tools/sprints'
-    | '/dev-tools/team'
-    | '/dev-tools/updates'
-    | '/projects/$projectId'
+    | '/analytics/'
     | '/dev-tools/'
+    | '/github/'
+    | '/issues/'
     | '/projects/'
-    | '/projects/$projectId/analytics'
-    | '/projects/$projectId/github'
-    | '/projects/$projectId/gitlab'
-    | '/projects/$projectId/issues'
-    | '/projects/$projectId/settings'
+    | '/settings/'
+    | '/sprints/'
+    | '/team/'
+    | '/updates/'
     | '/provider/gitlab/$projectId'
+    | '/dev-tools/analytics/'
+    | '/dev-tools/issues/'
+    | '/dev-tools/projects/'
+    | '/dev-tools/sprints/'
+    | '/dev-tools/team/'
+    | '/dev-tools/updates/'
+    | '/projects/$projectId/'
     | '/provider/github/'
     | '/provider/gitlab/'
     | '/provider/github/$owner/$repo'
+    | '/projects/$projectId/analytics/'
+    | '/projects/$projectId/github/'
+    | '/projects/$projectId/gitlab/'
+    | '/projects/$projectId/issues/'
+    | '/projects/$projectId/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
-  AnalyticsRoute: typeof AnalyticsRoute
-  GithubRoute: typeof GithubRoute
-  IssuesRoute: typeof IssuesRoute
-  SettingsRoute: typeof SettingsRoute
-  SprintsRoute: typeof SprintsRoute
-  TeamRoute: typeof TeamRoute
-  UpdatesRoute: typeof UpdatesRoute
-  DevToolsAnalyticsRoute: typeof DevToolsAnalyticsRoute
-  DevToolsIssuesRoute: typeof DevToolsIssuesRoute
-  DevToolsProjectsRoute: typeof DevToolsProjectsRoute
-  DevToolsSprintsRoute: typeof DevToolsSprintsRoute
-  DevToolsTeamRoute: typeof DevToolsTeamRoute
-  DevToolsUpdatesRoute: typeof DevToolsUpdatesRoute
-  ProjectsProjectIdRoute: typeof ProjectsProjectIdRouteWithChildren
+  AnalyticsIndexRoute: typeof AnalyticsIndexRoute
   DevToolsIndexRoute: typeof DevToolsIndexRoute
+  GithubIndexRoute: typeof GithubIndexRoute
+  IssuesIndexRoute: typeof IssuesIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+  SprintsIndexRoute: typeof SprintsIndexRoute
+  TeamIndexRoute: typeof TeamIndexRoute
+  UpdatesIndexRoute: typeof UpdatesIndexRoute
   ProviderGitlabProjectIdRoute: typeof ProviderGitlabProjectIdRoute
+  DevToolsAnalyticsIndexRoute: typeof DevToolsAnalyticsIndexRoute
+  DevToolsIssuesIndexRoute: typeof DevToolsIssuesIndexRoute
+  DevToolsProjectsIndexRoute: typeof DevToolsProjectsIndexRoute
+  DevToolsSprintsIndexRoute: typeof DevToolsSprintsIndexRoute
+  DevToolsTeamIndexRoute: typeof DevToolsTeamIndexRoute
+  DevToolsUpdatesIndexRoute: typeof DevToolsUpdatesIndexRoute
+  ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
   ProviderGithubIndexRoute: typeof ProviderGithubIndexRoute
   ProviderGitlabIndexRoute: typeof ProviderGitlabIndexRoute
   ProviderGithubOwnerRepoRoute: typeof ProviderGithubOwnerRepoRoute
+  ProjectsProjectIdAnalyticsIndexRoute: typeof ProjectsProjectIdAnalyticsIndexRoute
+  ProjectsProjectIdGithubIndexRoute: typeof ProjectsProjectIdGithubIndexRoute
+  ProjectsProjectIdGitlabIndexRoute: typeof ProjectsProjectIdGitlabIndexRoute
+  ProjectsProjectIdIssuesIndexRoute: typeof ProjectsProjectIdIssuesIndexRoute
+  ProjectsProjectIdSettingsIndexRoute: typeof ProjectsProjectIdSettingsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/updates': {
-      id: '/updates'
-      path: '/updates'
-      fullPath: '/updates'
-      preLoaderRoute: typeof UpdatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/team': {
-      id: '/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof TeamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sprints': {
-      id: '/sprints'
-      path: '/sprints'
-      fullPath: '/sprints'
-      preLoaderRoute: typeof SprintsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/issues': {
-      id: '/issues'
-      path: '/issues'
-      fullPath: '/issues'
-      preLoaderRoute: typeof IssuesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/github': {
-      id: '/github'
-      path: '/github'
-      fullPath: '/github'
-      preLoaderRoute: typeof GithubRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/$': {
       id: '/$'
       path: '/$'
@@ -443,11 +402,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/updates/': {
+      id: '/updates/'
+      path: '/updates'
+      fullPath: '/updates'
+      preLoaderRoute: typeof UpdatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team/': {
+      id: '/team/'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sprints/': {
+      id: '/sprints/'
+      path: '/sprints'
+      fullPath: '/sprints'
+      preLoaderRoute: typeof SprintsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/issues/': {
+      id: '/issues/'
+      path: '/issues'
+      fullPath: '/issues'
+      preLoaderRoute: typeof IssuesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/github/': {
+      id: '/github/'
+      path: '/github'
+      fullPath: '/github'
+      preLoaderRoute: typeof GithubIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev-tools/': {
@@ -457,53 +458,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevToolsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/projects/$projectId': {
-      id: '/projects/$projectId'
-      path: '/projects/$projectId'
-      fullPath: '/projects/$projectId'
-      preLoaderRoute: typeof ProjectsProjectIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-tools/updates': {
-      id: '/dev-tools/updates'
-      path: '/dev-tools/updates'
-      fullPath: '/dev-tools/updates'
-      preLoaderRoute: typeof DevToolsUpdatesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-tools/team': {
-      id: '/dev-tools/team'
-      path: '/dev-tools/team'
-      fullPath: '/dev-tools/team'
-      preLoaderRoute: typeof DevToolsTeamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-tools/sprints': {
-      id: '/dev-tools/sprints'
-      path: '/dev-tools/sprints'
-      fullPath: '/dev-tools/sprints'
-      preLoaderRoute: typeof DevToolsSprintsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-tools/projects': {
-      id: '/dev-tools/projects'
-      path: '/dev-tools/projects'
-      fullPath: '/dev-tools/projects'
-      preLoaderRoute: typeof DevToolsProjectsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-tools/issues': {
-      id: '/dev-tools/issues'
-      path: '/dev-tools/issues'
-      fullPath: '/dev-tools/issues'
-      preLoaderRoute: typeof DevToolsIssuesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-tools/analytics': {
-      id: '/dev-tools/analytics'
-      path: '/dev-tools/analytics'
-      fullPath: '/dev-tools/analytics'
-      preLoaderRoute: typeof DevToolsAnalyticsRouteImport
+    '/analytics/': {
+      id: '/analytics/'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/provider/gitlab/': {
@@ -520,6 +479,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProviderGithubIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$projectId/': {
+      id: '/projects/$projectId/'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev-tools/updates/': {
+      id: '/dev-tools/updates/'
+      path: '/dev-tools/updates'
+      fullPath: '/dev-tools/updates'
+      preLoaderRoute: typeof DevToolsUpdatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev-tools/team/': {
+      id: '/dev-tools/team/'
+      path: '/dev-tools/team'
+      fullPath: '/dev-tools/team'
+      preLoaderRoute: typeof DevToolsTeamIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev-tools/sprints/': {
+      id: '/dev-tools/sprints/'
+      path: '/dev-tools/sprints'
+      fullPath: '/dev-tools/sprints'
+      preLoaderRoute: typeof DevToolsSprintsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev-tools/projects/': {
+      id: '/dev-tools/projects/'
+      path: '/dev-tools/projects'
+      fullPath: '/dev-tools/projects'
+      preLoaderRoute: typeof DevToolsProjectsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev-tools/issues/': {
+      id: '/dev-tools/issues/'
+      path: '/dev-tools/issues'
+      fullPath: '/dev-tools/issues'
+      preLoaderRoute: typeof DevToolsIssuesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev-tools/analytics/': {
+      id: '/dev-tools/analytics/'
+      path: '/dev-tools/analytics'
+      fullPath: '/dev-tools/analytics'
+      preLoaderRoute: typeof DevToolsAnalyticsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/provider/gitlab/$projectId': {
       id: '/provider/gitlab/$projectId'
       path: '/provider/gitlab/$projectId'
@@ -527,40 +535,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProviderGitlabProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/projects/$projectId/settings': {
-      id: '/projects/$projectId/settings'
-      path: '/settings'
+    '/projects/$projectId/settings/': {
+      id: '/projects/$projectId/settings/'
+      path: '/projects/$projectId/settings'
       fullPath: '/projects/$projectId/settings'
-      preLoaderRoute: typeof ProjectsProjectIdSettingsRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof ProjectsProjectIdSettingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/projects/$projectId/issues': {
-      id: '/projects/$projectId/issues'
-      path: '/issues'
+    '/projects/$projectId/issues/': {
+      id: '/projects/$projectId/issues/'
+      path: '/projects/$projectId/issues'
       fullPath: '/projects/$projectId/issues'
-      preLoaderRoute: typeof ProjectsProjectIdIssuesRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof ProjectsProjectIdIssuesIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/projects/$projectId/gitlab': {
-      id: '/projects/$projectId/gitlab'
-      path: '/gitlab'
+    '/projects/$projectId/gitlab/': {
+      id: '/projects/$projectId/gitlab/'
+      path: '/projects/$projectId/gitlab'
       fullPath: '/projects/$projectId/gitlab'
-      preLoaderRoute: typeof ProjectsProjectIdGitlabRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof ProjectsProjectIdGitlabIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/projects/$projectId/github': {
-      id: '/projects/$projectId/github'
-      path: '/github'
+    '/projects/$projectId/github/': {
+      id: '/projects/$projectId/github/'
+      path: '/projects/$projectId/github'
       fullPath: '/projects/$projectId/github'
-      preLoaderRoute: typeof ProjectsProjectIdGithubRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof ProjectsProjectIdGithubIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/projects/$projectId/analytics': {
-      id: '/projects/$projectId/analytics'
-      path: '/analytics'
+    '/projects/$projectId/analytics/': {
+      id: '/projects/$projectId/analytics/'
+      path: '/projects/$projectId/analytics'
       fullPath: '/projects/$projectId/analytics'
-      preLoaderRoute: typeof ProjectsProjectIdAnalyticsRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
+      preLoaderRoute: typeof ProjectsProjectIdAnalyticsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/provider/github/$owner/$repo': {
       id: '/provider/github/$owner/$repo'
@@ -572,48 +580,34 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ProjectsProjectIdRouteChildren {
-  ProjectsProjectIdAnalyticsRoute: typeof ProjectsProjectIdAnalyticsRoute
-  ProjectsProjectIdGithubRoute: typeof ProjectsProjectIdGithubRoute
-  ProjectsProjectIdGitlabRoute: typeof ProjectsProjectIdGitlabRoute
-  ProjectsProjectIdIssuesRoute: typeof ProjectsProjectIdIssuesRoute
-  ProjectsProjectIdSettingsRoute: typeof ProjectsProjectIdSettingsRoute
-}
-
-const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
-  ProjectsProjectIdAnalyticsRoute: ProjectsProjectIdAnalyticsRoute,
-  ProjectsProjectIdGithubRoute: ProjectsProjectIdGithubRoute,
-  ProjectsProjectIdGitlabRoute: ProjectsProjectIdGitlabRoute,
-  ProjectsProjectIdIssuesRoute: ProjectsProjectIdIssuesRoute,
-  ProjectsProjectIdSettingsRoute: ProjectsProjectIdSettingsRoute,
-}
-
-const ProjectsProjectIdRouteWithChildren =
-  ProjectsProjectIdRoute._addFileChildren(ProjectsProjectIdRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
-  AnalyticsRoute: AnalyticsRoute,
-  GithubRoute: GithubRoute,
-  IssuesRoute: IssuesRoute,
-  SettingsRoute: SettingsRoute,
-  SprintsRoute: SprintsRoute,
-  TeamRoute: TeamRoute,
-  UpdatesRoute: UpdatesRoute,
-  DevToolsAnalyticsRoute: DevToolsAnalyticsRoute,
-  DevToolsIssuesRoute: DevToolsIssuesRoute,
-  DevToolsProjectsRoute: DevToolsProjectsRoute,
-  DevToolsSprintsRoute: DevToolsSprintsRoute,
-  DevToolsTeamRoute: DevToolsTeamRoute,
-  DevToolsUpdatesRoute: DevToolsUpdatesRoute,
-  ProjectsProjectIdRoute: ProjectsProjectIdRouteWithChildren,
+  AnalyticsIndexRoute: AnalyticsIndexRoute,
   DevToolsIndexRoute: DevToolsIndexRoute,
+  GithubIndexRoute: GithubIndexRoute,
+  IssuesIndexRoute: IssuesIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+  SprintsIndexRoute: SprintsIndexRoute,
+  TeamIndexRoute: TeamIndexRoute,
+  UpdatesIndexRoute: UpdatesIndexRoute,
   ProviderGitlabProjectIdRoute: ProviderGitlabProjectIdRoute,
+  DevToolsAnalyticsIndexRoute: DevToolsAnalyticsIndexRoute,
+  DevToolsIssuesIndexRoute: DevToolsIssuesIndexRoute,
+  DevToolsProjectsIndexRoute: DevToolsProjectsIndexRoute,
+  DevToolsSprintsIndexRoute: DevToolsSprintsIndexRoute,
+  DevToolsTeamIndexRoute: DevToolsTeamIndexRoute,
+  DevToolsUpdatesIndexRoute: DevToolsUpdatesIndexRoute,
+  ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
   ProviderGithubIndexRoute: ProviderGithubIndexRoute,
   ProviderGitlabIndexRoute: ProviderGitlabIndexRoute,
   ProviderGithubOwnerRepoRoute: ProviderGithubOwnerRepoRoute,
+  ProjectsProjectIdAnalyticsIndexRoute: ProjectsProjectIdAnalyticsIndexRoute,
+  ProjectsProjectIdGithubIndexRoute: ProjectsProjectIdGithubIndexRoute,
+  ProjectsProjectIdGitlabIndexRoute: ProjectsProjectIdGitlabIndexRoute,
+  ProjectsProjectIdIssuesIndexRoute: ProjectsProjectIdIssuesIndexRoute,
+  ProjectsProjectIdSettingsIndexRoute: ProjectsProjectIdSettingsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

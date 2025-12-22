@@ -34,7 +34,7 @@ import { getMockUpdates } from '@/server/dev-tools-mocks'
 import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/dev-tools/updates')({
+export const Route = createFileRoute('/dev-tools/updates/')({
   loader: async () => {
     const updates = await getMockUpdates()
     return { updates }

@@ -98,6 +98,53 @@ src/
 └── lib/             # Utilities (cn for Tailwind classes)
 ```
 
+### Recommended TanStack Start Architecture (General)
+
+Use this layout for any TanStack Start app to keep routing, data, and UI cleanly separated:
+
+```
+src/
+├── routes/                 # File-based routes (1 folder per route)
+│   ├── index.tsx           # /
+│   ├── _layout.tsx         # shared layout(s)
+│   ├── sprints/
+│   │   ├── index.tsx       # /sprints
+│   │   └── $sprintId.tsx   # /sprints/:sprintId
+│   └── ...                # more routes
+├── features/               # Domain modules (UI + hooks + utils per domain)
+│   ├── issues/
+│   ├── projects/
+│   └── sprints/
+├── components/             # Shared UI (ui/ for shadcn)
+├── server/
+│   ├── db.ts               # Re-export server functions
+│   └── functions/          # Server functions per domain
+├── db/
+│   ├── index.ts            # Drizzle client + exports
+│   └── schema/             # Tables per domain
+├── hooks/                  # Cross-domain hooks
+├── types/                  # Cross-domain types
+└── lib/                    # Shared utilities
+```
+
+**Routing conventions**
+
+- Prefer folder-based routes (e.g. `src/routes/sprints/index.tsx`).
+- Use `_layout.tsx` for nested layouts and ensure it renders `<Outlet />`.
+- Route loaders should fetch data via `src/server/db` functions only.
+
+**Server functions**
+
+- Keep CRUD in `src/server/functions/<domain>.ts`.
+- Use `createServerFn({ method })` + `.inputValidator(...)`.
+- Generate IDs and timestamps on the server (not in the client).
+
+**UI + domain boundaries**
+
+- Put domain-specific components in `src/features/<domain>/`.
+- Keep `src/components/` for shared UI primitives only.
+- Keep data transforms near the route loader (not inside UI components).
+
 ### Domain Models
 
 Issues, Projects, Sprints, TeamMembers, Updates, Templates, Automations - each in `src/db/schema/<domain>.ts`
