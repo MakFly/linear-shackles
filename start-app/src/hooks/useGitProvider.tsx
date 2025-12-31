@@ -21,7 +21,7 @@ export interface GitProviderActions {
   baseUrl?: string
   connect: (token: string, repositoryId?: string, baseUrl?: string) => void
   disconnect: () => void
-  getRepositories: () => Promise<Array<GitRepository>>
+  getRepositories: () => Promise<GitRepository[]>
 }
 
 export const useGitProvider = (provider: GitProvider): GitProviderActions => {

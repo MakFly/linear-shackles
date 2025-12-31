@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { CheckCircle2, AlertCircle, Circle, Link2 } from 'lucide-react'
-import { Issue } from '@/types/issue'
+import type { Issue } from '@/types/issue'
 import { cn } from '@/lib/utils'
 
 interface KanbanCardProps {

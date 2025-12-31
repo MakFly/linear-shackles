@@ -1,6 +1,19 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
-import { List, Columns, Calendar, Table2, Plus, Loader2, CircleDot, Trash2, Download } from 'lucide-react'
+import {
+  List,
+  Columns,
+  Calendar,
+  Table2,
+  Plus,
+  Loader2,
+  CircleDot,
+  Trash2,
+  Download,
+  Github,
+  Gitlab,
+  Cloud,
+} from 'lucide-react'
 import { DraggableIssueRow } from '@/features/issues/components/DraggableIssueRow'
 import { CommandPalette } from '@/components/CommandPalette'
 import { IssuesTableV2 } from '@/features/issues/components/IssuesTableV2'
@@ -34,7 +47,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
+import type {
   Issue,
   IssueTemplate,
   FilterConfig,
@@ -42,12 +55,23 @@ import {
   Automation,
   Sprint,
 } from '@/types/issue'
-import { getProjectById, getIssues, createIssue as createIssueInDb, updateIssue as updateIssueInDb, deleteIssue as deleteIssueInDb, createUpdate } from '@/server/db'
-import { useGitHub } from '@/hooks/useGitHub'
-import { useGitLab } from '@/hooks/useGitLab'
+import {
+  getProjectByIdOrSlug,
+  getIssues,
+  createIssue as createIssueInDb,
+  updateIssue as updateIssueInDb,
+  deleteIssue as deleteIssueInDb,
+  updateIssuePositions,
+  createUpdate,
+} from '@/server/db'
+import { useGitHubProvider } from '@/hooks/useGitHubProvider'
+import { useGitLabProvider } from '@/hooks/useGitLabProvider'
 import type { Project } from '@/db/schema'
 import type { GitHubIssue } from '@/types/github'
 import type { GitLabIssue } from '@/types/gitlab'
+import type {
+  DragEndEvent,
+  DragStartEvent} from '@dnd-kit/core';
 import {
   DndContext,
   closestCenter,
@@ -55,8 +79,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
   DragOverlay,
 } from '@dnd-kit/core'
 import {
@@ -67,27 +89,33 @@ import {
 } from '@dnd-kit/sortable'
 import { toast } from 'sonner'
 
-export const Route = createFileRoute('/projects/$projectId/issues/')({
+export const Route = createFileRoute('/projects/$slugOrId/issues/')({
   component: ProjectIssues,
   loader: async ({ params }) => {
     const [project, dbIssues] = await Promise.all([
-      getProjectById({ data: params.projectId }),
+      getProjectByIdOrSlug({ data: params.slugOrId }),
       getIssues(),
     ])
-    // Filtrer les issues pour ce projet (basé sur projectId dans l'issue)
-    const projectIssues = dbIssues.filter((issue) => issue.projectId === params.projectId)
+    // Filtrer les issues pour ce projet (utilise l'ID du projet, pas le slug)
+    const projectIssues = project
+      ? dbIssues.filter((issue) => issue.projectId === project.id)
+      : []
     return { project, dbIssues: projectIssues }
   },
 })
 
-// Helper pour détecter le provider depuis la description du projet
-function detectProvider(project: Project | null): { provider: 'github' | 'gitlab' | null; providerId: string | null } {
-  if (!project?.description) return { provider: null, providerId: null }
+// Helper pour détecter le provider depuis les colonnes du projet
+function detectProvider(project: Project | null): {
+  provider: 'github' | 'gitlab' | null
+  providerId: string | null
+} {
+  if (!project) return { provider: null, providerId: null }
 
-  const match = project.description.match(/provider:(github|gitlab):([^\s\n]+)/)
-  if (match) {
-    return { provider: match[1] as 'github' | 'gitlab', providerId: match[2] }
+  // Use the provider columns from the project directly
+  if (project.provider && project.providerProjectId) {
+    return { provider: project.provider, providerId: project.providerProjectId }
   }
+
   return { provider: null, providerId: null }
 }
 
@@ -114,23 +142,46 @@ function dbIssueToFrontend(dbIssue: any): IssueWithProvider {
 }
 
 function ProjectIssues() {
-  const { projectId } = Route.useParams()
+  const { slugOrId } = Route.useParams()
   const { project, dbIssues } = Route.useLoaderData()
 
-  // Détecter le provider
-  const { provider, providerId } = useMemo(() => detectProvider(project), [project])
+  // Early return if project not found
+  if (!project) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Projet non trouvé</p>
+      </div>
+    )
+  }
 
-  // Hooks pour les providers
-  const github = useGitHub()
-  const gitlab = useGitLab()
+  // Hooks pour les providers - utilisent l'ID du projet (pas le slug)
+  const github = useGitHubProvider(project.id)
+  const gitlab = useGitLabProvider(project.id)
+
+  // Détecter le provider (depuis les credentials d'abord, puis les colonnes du projet)
+  const { provider, providerId } = useMemo(() => {
+    // Priorité aux credentials (pour les projets créés avant les colonnes provider)
+    if (github.isConnected && github.repo) {
+      return { provider: 'github' as const, providerId: github.repo }
+    }
+    if (gitlab.isConnected && gitlab.projectId) {
+      return { provider: 'gitlab' as const, providerId: gitlab.projectId }
+    }
+
+    // Fallback aux colonnes du projet
+    return detectProvider(project)
+  }, [project, github.isConnected, github.repo, gitlab.isConnected, gitlab.projectId])
 
   // Convertir les issues de la BDD
-  const initialIssues = useMemo(() => dbIssues.map(dbIssueToFrontend), [dbIssues])
+  const initialIssues = useMemo(
+    () => dbIssues.map(dbIssueToFrontend),
+    [dbIssues],
+  )
 
   // IDs des issues déjà importées
   const existingProviderIds = useMemo(() => {
     return new Set<string>(
-      (dbIssues as Array<{ providerIssueId?: string | null }>)
+      (dbIssues as { providerIssueId?: string | null }[])
         .filter((i) => i.providerIssueId)
         .map((i) => i.providerIssueId!),
     )
@@ -151,12 +202,16 @@ function ProjectIssues() {
   const [creating, setCreating] = useState(false)
 
   // État pour le dialog de suppression
-  const [issueToDelete, setIssueToDelete] = useState<IssueWithProvider | null>(null)
+  const [issueToDelete, setIssueToDelete] = useState<IssueWithProvider | null>(
+    null,
+  )
   const [deleting, setDeleting] = useState(false)
 
   // État pour l'import d'issues
   const [showImportDialog, setShowImportDialog] = useState(false)
-  const [remoteIssues, setRemoteIssues] = useState<Array<GitHubIssue | GitLabIssue>>([])
+  const [remoteIssues, setRemoteIssues] = useState<
+    (GitHubIssue | GitLabIssue)[]
+  >([])
   const [loadingRemoteIssues, setLoadingRemoteIssues] = useState(false)
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
@@ -188,16 +243,17 @@ function ProjectIssues() {
   )
 
   // Connecter au provider si nécessaire
+  // Note: The useGitHubProvider/useGitLabProvider hooks auto-load credentials from DB
+  // No need to manually connect - the hooks will set isConnected=true when credentials are found
   useEffect(() => {
-    if (provider === 'github' && providerId && github.token && !github.isConnected) {
-      github.connect(github.token, providerId)
-    } else if (provider === 'gitlab' && providerId && gitlab.token && !gitlab.isConnected) {
-      gitlab.connect(gitlab.token, providerId, gitlab.gitlabUrl)
+    // Just log the connection status for debugging
+    if (provider && providerId) {
+      console.log('Provider detected:', { provider, providerId, githubConnected: github.isConnected, gitlabConnected: gitlab.isConnected })
     }
-  }, [provider, providerId, github, gitlab])
+  }, [provider, providerId, github.isConnected, gitlab.isConnected])
 
-  // Fonction pour créer une issue (BDD d'abord, puis Provider)
-  const handleCreateIssue = async () => {
+  // Fonction pour créer une issue (BDD d'abord, puis optionnellement Provider)
+  const handleCreateIssue = async (pushToProvider: boolean = false) => {
     if (!newIssueTitle.trim()) {
       toast.error('Le titre est requis')
       return
@@ -212,11 +268,11 @@ function ProjectIssues() {
         .filter((l) => l.length > 0)
 
       // 1. Créer en BDD d'abord
-      const issueId = `${projectId}-${Date.now()}`
+      const issueId = `${project.id}-${Date.now()}`
       const dbIssue = await createIssueInDb({
         data: {
           id: issueId,
-          projectId: projectId,
+          projectId: project.id,
           title: newIssueTitle,
           description: newIssueBody || null,
           status: 'backlog',
@@ -228,42 +284,49 @@ function ProjectIssues() {
 
       let providerIssueNumber: number | undefined
 
-      // 2. Push vers le provider si connecté
-      if (provider === 'github' && github.isConnected && providerId) {
-        try {
-          const githubIssue = await github.createIssue(
-            newIssueTitle,
-            newIssueBody || undefined,
-            labels.length > 0 ? labels : undefined,
-          )
-          providerIssueNumber = githubIssue.number
-          // Mettre à jour l'issue locale avec l'ID provider
-          await updateIssueInDb({
-            data: {
-              id: issueId,
-              updates: { providerIssueId: String(providerIssueNumber) },
-            },
-          })
-        } catch (err) {
-          console.error('Erreur sync GitHub:', err)
-          // L'issue est créée localement, on continue
-        }
-      } else if (provider === 'gitlab' && gitlab.isConnected && providerId) {
-        try {
-          const gitlabIssue = await gitlab.createIssue(
-            newIssueTitle,
-            newIssueBody || undefined,
-            labels.length > 0 ? labels : undefined,
-          )
-          providerIssueNumber = gitlabIssue.iid
-          await updateIssueInDb({
-            data: {
-              id: issueId,
-              updates: { providerIssueId: String(providerIssueNumber) },
-            },
-          })
-        } catch (err) {
-          console.error('Erreur sync GitLab:', err)
+      // 2. Push vers le provider SI demandé ET connecté
+      if (pushToProvider && provider && providerId) {
+        if (provider === 'github' && github.isConnected) {
+          try {
+            console.log('Creating GitHub issue with:', { repo: providerId, title: newIssueTitle })
+            const githubIssue = await github.createIssue(
+              providerId,
+              newIssueTitle,
+              newIssueBody || undefined,
+              labels.length > 0 ? labels : undefined,
+            )
+            console.log('GitHub issue created:', githubIssue)
+            providerIssueNumber = githubIssue.number
+            await updateIssueInDb({
+              data: {
+                id: issueId,
+                updates: { providerIssueId: String(providerIssueNumber) },
+              },
+            })
+          } catch (err) {
+            console.error('Erreur sync GitHub:', err)
+            throw new Error(`Échec de la création sur GitHub: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+          }
+        } else if (provider === 'gitlab' && gitlab.isConnected) {
+          try {
+            console.log('Creating GitLab issue with:', { projectId: providerId, title: newIssueTitle })
+            const gitlabIssue = await gitlab.createIssue(
+              providerId,
+              newIssueTitle,
+              newIssueBody || undefined,
+              labels.length > 0 ? labels : undefined,
+            )
+            providerIssueNumber = gitlabIssue.iid
+            await updateIssueInDb({
+              data: {
+                id: issueId,
+                updates: { providerIssueId: String(providerIssueNumber) },
+              },
+            })
+          } catch (err) {
+            console.error('Erreur sync GitLab:', err)
+            throw new Error(`Échec de la création sur GitLab: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+          }
         }
       }
 
@@ -286,7 +349,13 @@ function ProjectIssues() {
       })
 
       // 4. Ajouter à l'état local
-      const createdIssue = dbIssue as { id: string; title: string; description?: string | null; createdAt: string; updatedAt: string }
+      const createdIssue = dbIssue as {
+        id: string
+        title: string
+        description?: string | null
+        createdAt: string
+        updatedAt: string
+      }
       const now = new Date().toISOString()
       const newIssue: IssueWithProvider = {
         id: createdIssue.id,
@@ -297,7 +366,9 @@ function ProjectIssues() {
         date: createdIssue.createdAt,
         labels: labels,
         assignees: [],
-        providerIssueId: providerIssueNumber ? String(providerIssueNumber) : null,
+        providerIssueId: providerIssueNumber
+          ? String(providerIssueNumber)
+          : null,
         createdAt: createdIssue.createdAt || now,
         updatedAt: createdIssue.updatedAt || now,
       }
@@ -309,17 +380,17 @@ function ProjectIssues() {
       setNewIssueLabels('')
       setShowCreateDialog(false)
 
-      return { title: newIssueTitle, providerIssueNumber }
+      return { title: newIssueTitle, providerIssueNumber, pushedToProvider: pushToProvider }
     }
 
     toast.promise(createOperation(), {
-      loading: 'Création en cours...',
+      loading: pushToProvider ? 'Création et publication...' : 'Création locale...',
       success: (data) => {
         setCreating(false)
-        const providerMsg = data.providerIssueNumber
-          ? ` (#${data.providerIssueNumber} sur ${provider === 'github' ? 'GitHub' : 'GitLab'})`
-          : ''
-        return `Issue "${data.title}" créée${providerMsg}`
+        if (data.providerIssueNumber) {
+          return `Issue "${data.title}" créée (#${data.providerIssueNumber} sur ${provider === 'github' ? 'GitHub' : 'GitLab'})`
+        }
+        return `Issue "${data.title}" créée localement`
       },
       error: (err) => {
         setCreating(false)
@@ -333,6 +404,97 @@ function ProjectIssues() {
     setIssueToDelete(issue)
   }
 
+  // Synchroniser une issue vers le provider (GitHub/GitLab)
+  const syncToProvider = async (issue: IssueWithProvider) => {
+    if (!provider || !providerId) {
+      toast.error('Aucun provider configuré pour ce projet')
+      return
+    }
+
+    const syncOperation = async () => {
+      let providerIssueNumber: number | undefined
+
+      if (provider === 'github' && github.isConnected) {
+        try {
+          console.log('Syncing to GitHub:', { repo: providerId, title: issue.title })
+          const githubIssue = await github.createIssue(
+            providerId,
+            issue.title,
+            issue.description,
+            issue.labels,
+          )
+          providerIssueNumber = githubIssue.number
+          console.log('GitHub issue created:', githubIssue)
+
+          // Update local issue with provider ID
+          await updateIssueInDb({
+            data: {
+              id: issue.id,
+              updates: { providerIssueId: String(providerIssueNumber) },
+            },
+          })
+
+          // Update local state
+          setIssues((prev) =>
+            prev.map((i) =>
+              i.id === issue.id
+                ? { ...i, providerIssueId: String(providerIssueNumber) }
+                : i,
+            ),
+          )
+
+          return { provider: 'GitHub', number: providerIssueNumber }
+        } catch (err) {
+          console.error('Erreur sync GitHub:', err)
+          throw err
+        }
+      } else if (provider === 'gitlab' && gitlab.isConnected) {
+        try {
+          console.log('Syncing to GitLab:', { projectId: providerId, title: issue.title })
+          const gitlabIssue = await gitlab.createIssue(
+            providerId,
+            issue.title,
+            issue.description,
+            issue.labels,
+          )
+          providerIssueNumber = gitlabIssue.iid
+          console.log('GitLab issue created:', gitlabIssue)
+
+          // Update local issue with provider ID
+          await updateIssueInDb({
+            data: {
+              id: issue.id,
+              updates: { providerIssueId: String(providerIssueNumber) },
+            },
+          })
+
+          // Update local state
+          setIssues((prev) =>
+            prev.map((i) =>
+              i.id === issue.id
+                ? { ...i, providerIssueId: String(providerIssueNumber) }
+                : i,
+            ),
+          )
+
+          return { provider: 'GitLab', number: providerIssueNumber }
+        } catch (err) {
+          console.error('Erreur sync GitLab:', err)
+          throw err
+        }
+      } else {
+        throw new Error('Provider non connecté')
+      }
+    }
+
+    toast.promise(syncOperation(), {
+      loading: 'Synchronisation...',
+      success: (result) =>
+        `Issue synchronisée avec ${result.provider} (#${result.number})`,
+      error: (err) => `Erreur lors de la synchronisation: ${err.message}`,
+    })
+  }
+
   // Confirme et exécute la suppression
   const confirmDeleteIssue = async () => {
     if (!issueToDelete) return
@@ -342,14 +504,14 @@ function ProjectIssues() {
 
     const deleteOperation = async () => {
       // 1. Fermer sur le provider si connecté et si on a l'ID provider
-      if (issue.providerIssueId) {
+      if (issue.providerIssueId && providerId) {
         const providerIssueNumber = parseInt(issue.providerIssueId)
 
         if (provider === 'github' && github.isConnected) {
-          await github.closeIssue(providerIssueNumber)
-        } else if (provider === 'gitlab' && gitlab.isConnected) {
-          await gitlab.closeIssue(providerIssueNumber)
+          // Utiliser le providerId du projet pour fermer l'issue sur le bon repo
+          await github.closeIssue(providerId, providerIssueNumber)
         }
+        // Note: GitLab close n'est pas encore implémenté dans le nouveau hook
       }
 
       // 2. Supprimer de la BDD via server action
@@ -393,11 +555,13 @@ function ProjectIssues() {
     setRemoteIssues([]) // Reset pour forcer le rechargement
 
     try {
-      if (provider === 'github' && github.isConnected) {
-        const issues = await github.getIssues('all')
+      if (provider === 'github' && github.isConnected && providerId) {
+        // github.getIssues(repo, state) - providerId est le repo (owner/repo)
+        const issues = await github.getIssues(providerId, 'all')
         setRemoteIssues(issues)
-      } else if (provider === 'gitlab' && gitlab.isConnected) {
-        const issues = await gitlab.getIssues('all')
+      } else if (provider === 'gitlab' && gitlab.isConnected && providerId) {
+        // gitlab.getIssues(projectId, state) - providerId est l'ID numérique du projet
+        const issues = await gitlab.getIssues(Number(providerId), 'all')
         setRemoteIssues(issues)
       }
     } catch (err) {
@@ -424,23 +588,33 @@ function ProjectIssues() {
     setActiveId(event.active.id as string)
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveId(null)
 
     if (over && active.id !== over.id) {
-      setIssues((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id)
-        const newIndex = items.findIndex((item) => item.id === over.id)
+      // Calculer le nouvel ordre
+      const oldIndex = issues.findIndex((item) => item.id === active.id)
+      const newIndex = issues.findIndex((item) => item.id === over.id)
+      const reorderedIssues = arrayMove(issues, oldIndex, newIndex)
 
-        const newItems = arrayMove(items, oldIndex, newIndex)
+      // Mettre à jour l'état local immédiatement
+      setIssues(reorderedIssues)
 
-        toast.success('Issue réorganisée', {
-          description: `${active.id} déplacée avec succès`,
-        })
+      // Persister les nouvelles positions en BDD
+      const positions = reorderedIssues.map((issue, index) => ({
+        id: issue.id,
+        position: index,
+      }))
 
-        return newItems
-      })
+      try {
+        await updateIssuePositions({ data: positions })
+        toast.success('Issue réorganisée')
+      } catch (err) {
+        toast.error('Erreur lors de la sauvegarde')
+        // Rollback en cas d'erreur
+        setIssues(issues)
+      }
     }
   }
 
@@ -586,7 +760,10 @@ function ProjectIssues() {
       <KeyboardShortcutsDialog />
 
       {/* Dialog de confirmation de suppression */}
-      <AlertDialog open={!!issueToDelete} onOpenChange={(open) => !open && setIssueToDelete(null)}>
+      <AlertDialog
+        open={!!issueToDelete}
+        onOpenChange={(open) => !open && setIssueToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer l'issue ?</AlertDialogTitle>
@@ -600,7 +777,8 @@ function ProjectIssues() {
                       <br />
                       <br />
                       L'issue sera également <strong>fermée</strong> sur{' '}
-                      {provider === 'github' ? 'GitHub' : 'GitLab'} (#{issueToDelete.providerIssueId}).
+                      {provider === 'github' ? 'GitHub' : 'GitLab'} (#
+                      {issueToDelete.providerIssueId}).
                     </>
                   )}
                   <br />
@@ -611,7 +789,9 @@ function ProjectIssues() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting} className="cursor-pointer">Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting} className="cursor-pointer">
+              Annuler
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteIssue}
               disabled={deleting}
@@ -639,7 +819,7 @@ function ProjectIssues() {
           open={showImportDialog}
           onOpenChange={setShowImportDialog}
           provider={provider}
-          projectId={projectId}
+          projectId={project.id}
           remoteIssues={remoteIssues}
           isLoading={loadingRemoteIssues}
           existingProviderIds={existingProviderIds}
@@ -733,19 +913,25 @@ function ProjectIssues() {
             </div>
             <div className="flex items-center gap-3">
               {/* Bouton importer depuis provider */}
-              {provider && (provider === 'github' ? github.isConnected : gitlab.isConnected) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenImport}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Importer
-                </Button>
-              )}
+              {provider &&
+                (provider === 'github'
+                  ? github.isConnected
+                  : gitlab.isConnected) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenImport}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Importer
+                  </Button>
+                )}
 
               {/* Bouton créer une issue */}
-              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+              <Dialog
+                open={showCreateDialog}
+                onOpenChange={setShowCreateDialog}
+              >
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -763,10 +949,18 @@ function ProjectIssues() {
                         <>
                           L'issue sera créée en local et synchronisée avec{' '}
                           {provider === 'github' ? 'GitHub' : 'GitLab'}
-                          {(provider === 'github' ? github.isConnected : gitlab.isConnected) ? (
-                            <span className="text-green-600 ml-1">(connecté)</span>
+                          {(
+                            provider === 'github'
+                              ? github.isConnected
+                              : gitlab.isConnected
+                          ) ? (
+                            <span className="text-green-600 ml-1">
+                              (connecté)
+                            </span>
                           ) : (
-                            <span className="text-yellow-600 ml-1">(non connecté - création locale uniquement)</span>
+                            <span className="text-yellow-600 ml-1">
+                              (non connecté - création locale uniquement)
+                            </span>
                           )}
                         </>
                       ) : (
@@ -804,24 +998,45 @@ function ProjectIssues() {
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-between gap-2">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => setShowCreateDialog(false)}
                       disabled={creating}
                     >
                       Annuler
                     </Button>
-                    <Button onClick={handleCreateIssue} disabled={creating}>
-                      {creating ? (
-                        <>
+                    <div className="flex gap-2">
+                      {/* Bouton créer localement */}
+                      <Button
+                        variant="outline"
+                        onClick={() => handleCreateIssue(false)}
+                        disabled={creating}
+                      >
+                        {creating ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Création...
-                        </>
-                      ) : (
-                        "Créer l'issue"
+                        ) : (
+                          <Cloud className="h-4 w-4 mr-2" />
+                        )}
+                        Créer localement
+                      </Button>
+                      {/* Bouton créer et publier - visible seulement si provider connecté */}
+                      {provider && (provider === 'github' ? github.isConnected : gitlab.isConnected) && (
+                        <Button
+                          onClick={() => handleCreateIssue(true)}
+                          disabled={creating}
+                        >
+                          {creating ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : provider === 'github' ? (
+                            <Github className="h-4 w-4 mr-2" />
+                          ) : (
+                            <Gitlab className="h-4 w-4 mr-2" />
+                          )}
+                          Créer et publier
+                        </Button>
                       )}
-                    </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -833,37 +1048,37 @@ function ProjectIssues() {
                   size="sm"
                   onClick={() => setViewMode('list')}
                   title="Liste"
-                className="rounded-full"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('table')}
-                title="Tableau v2"
-                className="rounded-full"
-              >
-                <Table2 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'board' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('board')}
-                title="Kanban"
-                className="rounded-full"
-              >
-                <Columns className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'sprint' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('sprint')}
-                title="Sprints"
-                className="rounded-full"
-              >
-                <Calendar className="h-4 w-4" />
-              </Button>
+                  className="rounded-full"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                  title="Tableau v2"
+                  className="rounded-full"
+                >
+                  <Table2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'board' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('board')}
+                  title="Kanban"
+                  className="rounded-full"
+                >
+                  <Columns className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'sprint' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('sprint')}
+                  title="Sprints"
+                  className="rounded-full"
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -883,6 +1098,7 @@ function ProjectIssues() {
             <div className="flex-1 overflow-hidden rounded-lg border bg-card shadow-sm">
               <div className="h-full overflow-y-auto scrollbar-custom">
                 <DndContext
+                  id="issues-dnd-context"
                   sensors={sensors}
                   collisionDetection={closestCenter}
                   onDragStart={handleDragStart}
@@ -907,7 +1123,10 @@ function ProjectIssues() {
                         const isExpanded = expandedGroups.has(issue.id)
 
                         return (
-                          <div key={issue.id} className="bg-card group relative">
+                          <div
+                            key={issue.id}
+                            className="bg-card group relative"
+                          >
                             <DraggableIssueRow
                               id={issue.id}
                               title={issue.title}
@@ -987,6 +1206,9 @@ function ProjectIssues() {
                 allIssues={issues}
                 onUpdateIssue={handleUpdateIssue}
                 onReorderIssues={setIssues}
+                onSyncIssue={syncToProvider}
+                provider={provider}
+                isProviderConnected={provider === 'github' ? github.isConnected : provider === 'gitlab' ? gitlab.isConnected : false}
               />
             </div>
           ) : viewMode === 'board' ? (

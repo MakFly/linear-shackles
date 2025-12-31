@@ -6,9 +6,16 @@ import {
   ChevronRight,
   GripVertical,
   Plus,
+  RefreshCw,
+  Cloud,
+  CloudOff,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Issue, IssueStatus } from '@/types/issue'
+import type { Issue} from '@/types/issue';
+import { IssueStatus } from '@/types/issue'
+import type {
+  DragEndEvent,
+  DragStartEvent} from '@dnd-kit/core';
 import {
   DndContext,
   closestCenter,
@@ -16,8 +23,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
   DragOverlay,
 } from '@dnd-kit/core'
 import {
@@ -55,6 +60,9 @@ interface IssuesTableV2Props {
   allIssues: Issue[]
   onUpdateIssue: (issue: Issue) => void
   onReorderIssues?: (issues: Issue[]) => void
+  onSyncIssue?: (issue: Issue) => void
+  provider?: 'github' | 'gitlab' | null
+  isProviderConnected?: boolean
 }
 
 const statusIcons = {
@@ -87,6 +95,9 @@ interface DraggableRowProps {
   hasChildren?: boolean
   onToggle?: () => void
   onClick: () => void
+  onSyncIssue?: (issue: Issue) => void
+  provider?: 'github' | 'gitlab' | null
+  isProviderConnected?: boolean
 }
 
 function DraggableTableRow({
@@ -96,6 +107,9 @@ function DraggableTableRow({
   hasChildren,
   onToggle,
   onClick,
+  onSyncIssue,
+  provider,
+  isProviderConnected,
 }: DraggableRowProps) {
   const {
     attributes,
@@ -184,6 +198,31 @@ function DraggableTableRow({
         )}
       </TableCell>
       <TableCell className="w-10">
+        {provider && isProviderConnected && (
+          <div className="flex items-center justify-center">
+            {(issue as any).providerIssueId ? (
+              <Cloud className="h-4 w-4 text-green-500" title={`Synced to ${provider}`} />
+            ) : onSyncIssue ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Use setTimeout to avoid updating state during render
+                  setTimeout(() => onSyncIssue(issue), 0)
+                }}
+                title="Sync to provider"
+              >
+                <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            ) : (
+              <CloudOff className="h-4 w-4 text-muted-foreground" title="Not synced" />
+            )}
+          </div>
+        )}
+      </TableCell>
+      <TableCell className="w-10">
         <Button
           variant="ghost"
           size="icon"
@@ -217,6 +256,9 @@ export function IssuesTableV2({
   allIssues,
   onUpdateIssue,
   onReorderIssues,
+  onSyncIssue,
+  provider,
+  isProviderConnected,
 }: IssuesTableV2Props) {
   const [localIssues, setLocalIssues] = useState(issues)
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
@@ -328,6 +370,7 @@ export function IssuesTableV2({
                 <TableHead className="w-20 text-right">Enfants</TableHead>
                 <TableHead className="w-24 text-right">Date</TableHead>
                 <TableHead className="w-10"></TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <SortableContext
@@ -349,6 +392,9 @@ export function IssuesTableV2({
                       hasChildren={hasChildren || children.length > 0}
                       onToggle={() => toggleExpand(issue.id)}
                       onClick={() => handleRowClick(issue)}
+                      onSyncIssue={onSyncIssue}
+                      provider={provider}
+                      isProviderConnected={isProviderConnected}
                     />
                   )
                 })}

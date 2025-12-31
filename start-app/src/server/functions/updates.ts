@@ -32,3 +32,9 @@ export const getUpdatesByIssueId = createServerFn({ method: 'GET' })
       return metadata?.issueId === issueId
     })
   })
+
+// Count updates
+export const getUpdatesCount = createServerFn({ method: 'GET' }).handler(async () => {
+  const result = await db.select().from(updates)
+  return result.length
+})

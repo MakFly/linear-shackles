@@ -6,10 +6,9 @@ import {
   KanbanHeader,
   KanbanProvider,
 } from '@/components/ui/shadcn-io/kanban'
-import { Issue, IssueStatus } from '@/types/issue'
+import type { Issue, IssueStatus } from '@/types/issue'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CheckCircle2, AlertCircle, Circle } from 'lucide-react'
-import { toast } from 'sonner'
 
 interface KanbanBoardProps {
   issues: Issue[]
@@ -70,11 +69,11 @@ export const KanbanBoard = ({
 
   const handleDataChange = (newData: KanbanIssue[]) => {
     // Find issues that changed column before updating state
-    const changedIssues: Array<{
+    const changedIssues: {
       id: string
       oldStatus: IssueStatus
       newStatus: IssueStatus
-    }> = []
+    }[] = []
 
     newData.forEach((item) => {
       const originalIssue = issues.find((i) => i.id === item.id)
@@ -90,12 +89,9 @@ export const KanbanBoard = ({
     // Update local state
     setData(newData)
 
-    // Notify parent of status changes
+    // Notify parent of status changes (parent handles toast)
     changedIssues.forEach(({ id, newStatus }) => {
       onStatusChange(id, newStatus)
-      toast.success('Issue déplacé', {
-        description: `${id} → ${statusConfig[newStatus].label}`,
-      })
     })
   }
 

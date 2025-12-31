@@ -15,6 +15,20 @@
       "when": 1766423327518,
       "tag": "0001_spotty_zzzax",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1767114633200,
+      "tag": "0002_cuddly_morph",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1767139712070,
+      "tag": "0003_daffy_nekra",
+      "breakpoints": true
     }
   ]
 }

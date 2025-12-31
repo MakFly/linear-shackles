@@ -13,7 +13,7 @@ export const sprints = sqliteTable('sprints', {
     .default('planning'),
   startDate: text('start_date').notNull(),
   endDate: text('end_date').notNull(),
-  issues: text('issues', { mode: 'json' }).$type<Array<string>>().default([]),
+  issues: text('issues', { mode: 'json' }).$type<string[]>().default([]),
   velocity: integer('velocity').default(0),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),

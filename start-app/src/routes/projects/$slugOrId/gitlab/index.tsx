@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DataTable } from '@/components/ui/data-table'
 import { toast } from 'sonner'
-import { getProjectById } from '@/server/db'
+import { getProjectByIdOrSlug } from '@/server/db'
 import {
   GitBranch,
   GitMerge,
@@ -35,45 +35,50 @@ import type {
   GitLabPipeline,
 } from '@/types/gitlab'
 
-export const Route = createFileRoute('/projects/$projectId/gitlab/')({
+export const Route = createFileRoute('/projects/$slugOrId/gitlab/')({
   component: ProjectGitLab,
   loader: async ({ params }) => {
-    const project = await getProjectById({ data: params.projectId })
+    const project = await getProjectByIdOrSlug({ data: params.slugOrId })
     return { project }
   },
 })
 
 function ProjectGitLab() {
   const { project } = Route.useLoaderData()
-  const gitlab = useGitLab()
+  const gitlab = useGitLab({ mode: 'project', projectId: project?.id })
 
-  // Extraire les infos GitLab depuis la description du projet
+  // Extraire les infos GitLab depuis les colonnes provider du projet
   const providerInfo = useMemo(() => {
-    if (!project?.description) return null
-    const match = project.description.match(/provider:gitlab:([^\s\n]+)/)
-    return match ? match[1] : null
-  }, [project?.description])
-
-  // Connecter automatiquement si on a un token
-  useEffect(() => {
-    if (providerInfo && gitlab.token && (!gitlab.isConnected || gitlab.projectId !== providerInfo)) {
-      gitlab.connect(gitlab.token, providerInfo, gitlab.gitlabUrl)
+    // Vérifier que c'est un projet GitLab et retourner l'identifiant du projet
+    if (project?.provider === 'gitlab' && project?.providerProjectId) {
+      return project.providerProjectId
     }
-  }, [providerInfo, gitlab.token, gitlab.isConnected, gitlab.projectId, gitlab])
+    return null
+  }, [project?.provider, project?.providerProjectId])
 
-  const { isConnected, projectId: currentProjectId, getIssues, getMergeRequests, getBranches, getPipelines } = gitlab
+  const {
+    isConnected,
+    projectId: currentProjectId,
+    getIssues,
+    getMergeRequests,
+    getBranches,
+    getPipelines,
+    loading: credentialsLoading,
+  } = gitlab
 
-  const [issues, setIssues] = useState<Array<GitLabIssue>>([])
-  const [mergeRequests, setMergeRequests] = useState<Array<GitLabMergeRequest>>([])
-  const [branches, setBranches] = useState<Array<GitLabBranch>>([])
-  const [pipelines, setPipelines] = useState<Array<GitLabPipeline>>([])
+  const [issues, setIssues] = useState<GitLabIssue[]>([])
+  const [mergeRequests, setMergeRequests] = useState<GitLabMergeRequest[]>(
+    [],
+  )
+  const [branches, setBranches] = useState<GitLabBranch[]>([])
+  const [pipelines, setPipelines] = useState<GitLabPipeline[]>([])
   const [pipelinesUnavailable, setPipelinesUnavailable] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [dataLoading, setDataLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('issues')
 
   const loadData = async () => {
     if (!isConnected) return
-    setLoading(true)
+    setDataLoading(true)
     setPipelinesUnavailable(false)
 
     const results = await Promise.allSettled([
@@ -92,7 +97,7 @@ function ProjectGitLab() {
       setPipelinesUnavailable(true)
     }
 
-    setLoading(false)
+    setDataLoading(false)
   }
 
   useEffect(() => {
@@ -102,16 +107,21 @@ function ProjectGitLab() {
   }, [isConnected, currentProjectId, providerInfo])
 
   const getStatusIcon = (state: string) => {
-    if (state === 'opened') return <CircleDot className="h-4 w-4 text-green-500" />
+    if (state === 'opened')
+      return <CircleDot className="h-4 w-4 text-green-500" />
     if (state === 'closed') return <XCircle className="h-4 w-4 text-red-500" />
-    if (state === 'merged') return <GitMerge className="h-4 w-4 text-purple-500" />
+    if (state === 'merged')
+      return <GitMerge className="h-4 w-4 text-purple-500" />
     return <CircleDot className="h-4 w-4" />
   }
 
   const getPipelineIcon = (status: string) => {
-    if (status === 'running') return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-    if (status === 'pending') return <PlayCircle className="h-4 w-4 text-gray-500" />
-    if (status === 'success') return <CheckCircle2 className="h-4 w-4 text-green-500" />
+    if (status === 'running')
+      return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+    if (status === 'pending')
+      return <PlayCircle className="h-4 w-4 text-gray-500" />
+    if (status === 'success')
+      return <CheckCircle2 className="h-4 w-4 text-green-500" />
     if (status === 'failed') return <XCircle className="h-4 w-4 text-red-500" />
     return <AlertCircle className="h-4 w-4 text-yellow-500" />
   }
@@ -189,20 +199,54 @@ function ProjectGitLab() {
 
   if (!providerInfo) {
     return (
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="p-6">
         <Card className="max-w-xl mx-auto">
           <CardHeader>
             <CardTitle>Aucun projet GitLab lié</CardTitle>
-            <CardDescription>Ce projet n'est pas lié à un projet GitLab.</CardDescription>
+            <CardDescription>
+              Ce projet n'est pas lié à un projet GitLab.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
     )
   }
 
-  if (!isConnected || currentProjectId !== providerInfo) {
+  // Show loading skeleton while credentials are loading OR project not yet loaded
+  if (credentialsLoading || !currentProjectId) {
     return (
       <div className="flex-1 p-6 overflow-auto">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-64" />
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-40" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-6 space-y-2">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-8 w-12" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Card>
+            <CardContent className="p-6">
+              <Skeleton className="h-32 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isConnected || currentProjectId !== providerInfo) {
+    return (
+      <div className="p-6">
         <Card className="max-w-xl mx-auto">
           <CardHeader>
             <CardTitle>Connexion GitLab requise</CardTitle>
@@ -229,8 +273,15 @@ function ProjectGitLab() {
             Projet: <span className="font-mono">{currentProjectId}</span>
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadData}
+              disabled={dataLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${dataLoading ? 'animate-spin' : ''}`}
+              />
               Actualiser
             </Button>
             <Button variant="outline" size="sm" asChild>
@@ -247,44 +298,79 @@ function ProjectGitLab() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Issues Ouvertes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {issues.filter((i) => i.state === 'opened').length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Merge Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {mergeRequests.filter((mr) => mr.state === 'opened').length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Branches</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{branches.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Pipelines</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {pipelines.filter((p) => p.status === 'running').length} actifs
-              </div>
-            </CardContent>
-          </Card>
+          {dataLoading ? (
+            <>
+              <Card>
+                <CardContent className="p-6 space-y-2">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-8 w-12" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6 space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-8 w-12" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6 space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-12" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6 space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-16" />
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">
+                    Issues Ouvertes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {issues.filter((i) => i.state === 'opened').length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">
+                    Merge Requests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {mergeRequests.filter((mr) => mr.state === 'opened').length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Branches</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{branches.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Pipelines</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {pipelines.filter((p) => p.status === 'running').length} actifs
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -301,24 +387,39 @@ function ProjectGitLab() {
               data={issues}
               searchKey="title"
               searchPlaceholder="Rechercher une issue..."
-              loading={loading}
+              loading={dataLoading}
               onRowClick={(issue) => window.open(issue.web_url, '_blank')}
             />
           </TabsContent>
 
           <TabsContent value="mrs" className="space-y-4 mt-4">
-            {loading ? (
+            {dataLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <Card key={i}>
                   <CardContent className="p-6">
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded-full" />
+                          <Skeleton className="h-6 w-40" />
+                          <Skeleton className="h-5 w-14 rounded-md" />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-4 w-28" />
+                        </div>
+                        <Skeleton className="h-4 w-48" />
+                      </div>
+                      <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+                    </div>
                   </CardContent>
                 </Card>
               ))
             ) : mergeRequests.length === 0 ? (
               <Card>
-                <CardContent className="p-6 text-center text-muted-foreground">Aucune MR</CardContent>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  Aucune MR
+                </CardContent>
               </Card>
             ) : (
               mergeRequests.map((mr) => (
@@ -328,19 +429,30 @@ function ProjectGitLab() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
                           {getStatusIcon(mr.state)}
-                          <h3 className="font-semibold">!{mr.iid} {mr.title}</h3>
+                          <h3 className="font-semibold">
+                            !{mr.iid} {mr.title}
+                          </h3>
                           {mr.draft && <Badge variant="secondary">Draft</Badge>}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{mr.source_branch} → {mr.target_branch}</span>
-                          {mr.changes_count && <span>{mr.changes_count} changements</span>}
+                          <span>
+                            {mr.source_branch} → {mr.target_branch}
+                          </span>
+                          {mr.changes_count && (
+                            <span>{mr.changes_count} changements</span>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Par {mr.author.username} • {new Date(mr.created_at).toLocaleDateString('fr-FR')}
+                          Par {mr.author.username} •{' '}
+                          {new Date(mr.created_at).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                       <Button variant="ghost" size="icon" asChild>
-                        <a href={mr.web_url} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={mr.web_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       </Button>
@@ -352,12 +464,26 @@ function ProjectGitLab() {
           </TabsContent>
 
           <TabsContent value="pipelines" className="space-y-4 mt-4">
-            {loading ? (
+            {dataLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <Card key={i}>
                   <CardContent className="p-6">
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded-full" />
+                          <Skeleton className="h-6 w-36" />
+                          <Skeleton className="h-5 w-16 rounded-md" />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Skeleton className="h-4 w-4 rounded-full" />
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+                    </div>
                   </CardContent>
                 </Card>
               ))
@@ -365,7 +491,9 @@ function ProjectGitLab() {
               <Card>
                 <CardContent className="p-8 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Pipelines non disponibles</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    Pipelines non disponibles
+                  </h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     Les pipelines CI/CD ne sont pas accessibles pour ce projet.
                   </p>
@@ -383,13 +511,18 @@ function ProjectGitLab() {
               </Card>
             ) : (
               pipelines.map((pipeline) => (
-                <Card key={pipeline.id} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={pipeline.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-2">
                           {getPipelineIcon(pipeline.status)}
-                          <h3 className="font-semibold">Pipeline #{pipeline.id}</h3>
+                          <h3 className="font-semibold">
+                            Pipeline #{pipeline.id}
+                          </h3>
                           <Badge variant="outline">{pipeline.status}</Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -398,11 +531,17 @@ function ProjectGitLab() {
                             {pipeline.ref}
                           </span>
                           <span>{pipeline.source}</span>
-                          {pipeline.duration && <span>{Math.round(pipeline.duration / 60)}min</span>}
+                          {pipeline.duration && (
+                            <span>{Math.round(pipeline.duration / 60)}min</span>
+                          )}
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" asChild>
-                        <a href={pipeline.web_url} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={pipeline.web_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       </Button>
@@ -414,27 +553,43 @@ function ProjectGitLab() {
           </TabsContent>
 
           <TabsContent value="branches" className="space-y-4 mt-4">
-            {loading ? (
+            {dataLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <Card key={i}>
                   <CardContent className="p-4">
-                    <Skeleton className="h-5 w-2/3" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                        <Skeleton className="h-5 w-32 font-mono" />
+                        <Skeleton className="h-5 w-16 rounded-md" />
+                      </div>
+                      <Skeleton className="h-4 w-12 font-mono text-xs" />
+                    </div>
                   </CardContent>
                 </Card>
               ))
             ) : branches.length === 0 ? (
               <Card>
-                <CardContent className="p-6 text-center text-muted-foreground">Aucune branche</CardContent>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  Aucune branche
+                </CardContent>
               </Card>
             ) : (
               branches.map((branch) => (
-                <Card key={branch.name} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={branch.name}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <GitBranch className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-mono font-medium">{branch.name}</span>
-                        {branch.protected && <Badge variant="secondary">Protected</Badge>}
+                        <span className="font-mono font-medium">
+                          {branch.name}
+                        </span>
+                        {branch.protected && (
+                          <Badge variant="secondary">Protected</Badge>
+                        )}
                         {branch.default && <Badge>Default</Badge>}
                       </div>
                       <code className="text-xs text-muted-foreground">

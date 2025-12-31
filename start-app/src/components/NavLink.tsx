@@ -1,5 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { forwardRef, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
 interface NavLinkCompatProps {

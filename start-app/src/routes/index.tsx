@@ -22,7 +22,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react'
-import { IssueStatus, IssuePriority } from '@/types/issue'
+import type { IssueStatus, IssuePriority } from '@/types/issue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { getAnalyticsData, getIssues } from '@/server/db'

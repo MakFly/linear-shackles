@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter  } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Progress } from '@/components/ui/progress'
 import { getMockTeamMembers } from '@/server/dev-tools-mocks'
-import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/dev-tools/team/')({
@@ -106,7 +105,7 @@ function Component() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {members.map((member) => {
             const config =
-              roleConfig[member.role as keyof typeof roleConfig] ||
+              roleConfig[member.role] ||
               roleConfig.member
             const RoleIcon = config.icon
             const completionRate = getCompletionRate(member)

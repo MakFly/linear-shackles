@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import type {
   GitHubIssue,
   GitHubPullRequest,
   GitHubBranch,
   GitHubWorkflowRun,
 } from '@/types/github'
+import {
+  getProviderCredentials,
+  saveProviderCredentials,
+  deleteProviderCredentials,
+} from '@/server/db'
 
 const GITHUB_API_BASE = 'https://api.github.com'
 
@@ -21,59 +26,128 @@ const normalizeRepo = (repoInput: string): string => {
   return repoInput.trim()
 }
 
-export const useGitHub = () => {
+export const useGitHub = (options?: { mode: 'global' | 'project'; projectId?: string }) => {
+  const mode = options?.mode || 'global'
+  const projectId = options?.projectId || 'global'
+
   const [token, setToken] = useState<string>('')
   const [repo, setRepo] = useState<string>('')
   const [isConnected, setIsConnected] = useState(false)
-  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
 
+  // Load credentials from DB ONLY
   useEffect(() => {
-    const savedToken = localStorage.getItem('github_token')
-    const savedRepo = localStorage.getItem('github_repo')
-    if (savedToken) setToken(savedToken)
-    if (savedRepo) {
-      // Normaliser le repo sauvegardé au cas où il serait mal formaté
-      const normalizedRepo = normalizeRepo(savedRepo)
-      setRepo(normalizedRepo)
-      // Mettre à jour le localStorage avec la version normalisée
-      if (normalizedRepo !== savedRepo) {
-        localStorage.setItem('github_repo', normalizedRepo)
+    const loadCredentials = async () => {
+      setLoading(true)
+      try {
+        // First try: load project-specific credentials
+        let credential = await getProviderCredentials({
+          data: { projectId, provider: 'github' },
+        })
+
+        // Fallback: if no project-specific credentials and mode is 'project', try 'global'
+        if (!credential && mode === 'project') {
+          credential = await getProviderCredentials({
+            data: { projectId: 'global', provider: 'github' },
+          })
+
+          // If global credentials found, save them for this project
+          if (credential) {
+            await saveProviderCredentials({
+              data: {
+                projectId,
+                provider: 'github',
+                token: credential.token,
+                providerUrl: credential.providerUrl,
+                providerRepo: credential.providerRepo || null,
+              },
+            })
+          }
+        }
+
+        if (credential) {
+          setToken(credential.token)
+          if (credential.providerRepo) {
+            setRepo(credential.providerRepo)
+          }
+          setIsConnected(true)
+        } else {
+          // No credentials found
+          setToken('')
+          setRepo('')
+          setIsConnected(false)
+        }
+      } catch (error) {
+        console.error('Error loading GitHub credentials:', error)
+        setToken('')
+        setRepo('')
+        setIsConnected(false)
+      } finally {
+        setLoading(false)
       }
     }
-    // Se connecter si on a un token (même sans repo pour lister les repos)
-    if (savedToken) setIsConnected(true)
-  }, [])
 
-  const connect = (newToken: string, newRepo?: string) => {
-    localStorage.setItem('github_token', newToken)
-    setToken(newToken)
-    setIsConnected(true)
+    loadCredentials()
+  }, [projectId, mode])
 
-    if (newRepo) {
-      const normalizedRepo = normalizeRepo(newRepo)
-      localStorage.setItem('github_repo', normalizedRepo)
-      setRepo(normalizedRepo)
-      toast({
-        title: 'GitHub connecté',
-        description: `Repository: ${normalizedRepo}`,
+  const connect = async (newToken: string, newRepo?: string) => {
+    setLoading(true)
+    try {
+      // Save ONLY to DB
+      await saveProviderCredentials({
+        data: {
+          projectId,
+          provider: 'github',
+          token: newToken,
+          providerUrl: GITHUB_API_BASE,
+          providerRepo: newRepo || null,
+        },
       })
-    } else {
-      toast({
-        title: 'GitHub connecté',
-        description: 'Token configuré',
-      })
+
+      // Update local state
+      setToken(newToken)
+      setIsConnected(true)
+
+      if (newRepo) {
+        const normalizedRepo = normalizeRepo(newRepo)
+        setRepo(normalizedRepo)
+        toast.success('GitHub connecté', {
+          description: `Repository: ${normalizedRepo}`,
+        })
+      } else {
+        toast.success('GitHub connecté', {
+          description: 'Token configuré',
+        })
+      }
+    } catch (error) {
+      console.error('Error connecting GitHub:', error)
+      toast.error('Erreur lors de la connexion GitHub')
+      throw error
+    } finally {
+      setLoading(false)
     }
   }
 
-  const disconnect = () => {
-    localStorage.removeItem('github_token')
-    localStorage.removeItem('github_repo')
-    setToken('')
-    setRepo('')
-    setIsConnected(false)
-    toast({
-      title: 'GitHub déconnecté',
-    })
+  const disconnect = async () => {
+    setLoading(true)
+    try {
+      // Remove ONLY from DB
+      await deleteProviderCredentials({
+        data: { projectId, provider: 'github' },
+      })
+
+      // Update local state
+      setToken('')
+      setRepo('')
+      setIsConnected(false)
+      toast.success('GitHub déconnecté')
+    } catch (error) {
+      console.error('Error disconnecting GitHub:', error)
+      toast.error('Erreur lors de la déconnexion GitHub')
+      throw error
+    } finally {
+      setLoading(false)
+    }
   }
 
   const makeRequest = async <T,>(endpoint: string): Promise<T> => {
@@ -105,7 +179,7 @@ export const useGitHub = () => {
       throw new Error('GitHub not connected')
     }
 
-    const repos: Array<{
+    const repos: {
       id: number
       name: string
       full_name: string
@@ -114,7 +188,7 @@ export const useGitHub = () => {
       default_branch: string
       private: boolean
       updated_at: string
-    }> = []
+    }[] = []
     let page = 1
     const perPage = 100
 
@@ -222,6 +296,7 @@ export const useGitHub = () => {
     isConnected,
     token,
     repo,
+    loading,
     connect,
     disconnect,
     getUserRepositories,

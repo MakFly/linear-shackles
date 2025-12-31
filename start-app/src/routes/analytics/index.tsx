@@ -66,11 +66,11 @@ function Component() {
     }))
 
   // Pas de données de tendance mockées - utiliser les vraies données si disponibles
-  const issuesTrend: Array<{
+  const issuesTrend: {
     date: string
     created: number
     resolved: number
-  }> = []
+  }[] = []
 
   const stats = [
     {

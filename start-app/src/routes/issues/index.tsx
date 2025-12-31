@@ -25,7 +25,7 @@ import { TemplateManager } from '@/features/issues/components/TemplateManager'
 import { AutomationManager } from '@/features/issues/components/AutomationManager'
 import { SprintManager } from '@/features/sprints/components/SprintManager'
 import { Button } from '@/components/ui/button'
-import {
+import type {
   Issue,
   IssueTemplate,
   FilterConfig,
@@ -33,6 +33,9 @@ import {
   Automation,
   Sprint,
 } from '@/types/issue'
+import type {
+  DragEndEvent,
+  DragStartEvent} from '@dnd-kit/core';
 import {
   DndContext,
   closestCenter,
@@ -40,8 +43,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
   DragOverlay,
 } from '@dnd-kit/core'
 import {

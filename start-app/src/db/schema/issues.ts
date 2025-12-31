@@ -20,10 +20,11 @@ export const issues = sqliteTable('issues', {
   date: text('date'),
   parentId: text('parent_id'),
   childrenCount: integer('children_count').default(0),
-  labels: text('labels', { mode: 'json' }).$type<Array<string>>(),
-  assignees: text('assignees', { mode: 'json' }).$type<Array<string>>(),
+  labels: text('labels', { mode: 'json' }).$type<string[]>(),
+  assignees: text('assignees', { mode: 'json' }).$type<string[]>(),
   customFields: text('custom_fields', { mode: 'json' }),
   providerIssueId: text('provider_issue_id'), // ID de l'issue sur GitHub/GitLab
+  position: integer('position').default(0), // Position pour le drag & drop
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })

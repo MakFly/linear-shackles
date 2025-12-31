@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter  } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -25,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { getMockProjects } from '@/server/dev-tools-mocks'
-import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/dev-tools/projects/')({
@@ -112,13 +111,13 @@ function Component() {
                         variant="outline"
                         className={
                           statusColors[
-                            project.status as keyof typeof statusColors
+                            project.status
                           ]
                         }
                       >
                         {
                           statusLabels[
-                            project.status as keyof typeof statusLabels
+                            project.status
                           ]
                         }
                       </Badge>

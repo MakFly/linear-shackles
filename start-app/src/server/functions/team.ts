@@ -4,18 +4,25 @@ import { eq, asc } from 'drizzle-orm'
 import type { TeamMember, NewTeamMember, Team, NewTeam } from '@/db/schema'
 
 // Types pour créer sans les champs auto-générés
-type CreateTeamData = Omit<NewTeam, 'id' | 'createdAt' | 'updatedAt'>
-type CreateTeamMemberData = Omit<
-  NewTeamMember,
-  'id' | 'createdAt' | 'updatedAt'
->
+interface CreateTeamData {
+  name: string
+  description?: string | null
+}
+
+interface CreateTeamMemberData {
+  teamId: string
+  name: string
+  email: string
+  role: 'owner' | 'admin' | 'member'
+  avatar?: string | null
+  status?: 'online' | 'offline' | 'away'
+  issuesAssigned?: number
+  issuesCompleted?: number
+}
 
 // Teams functions
 export const getTeams = createServerFn({ method: 'GET' }).handler(async () => {
-  const result = await db
-    .select()
-    .from(teams)
-    .orderBy(asc(teams.name))
+  const result = await db.select().from(teams).orderBy(asc(teams.name))
   return result
 })
 
@@ -42,13 +49,14 @@ export const getTeamWithMembers = createServerFn({ method: 'GET' })
   })
 
 export const createTeam = createServerFn({ method: 'POST' })
-  .inputValidator((team: CreateTeamData) => team)
-  .handler(async ({ data: team }) => {
+  .inputValidator((data: CreateTeamData) => data)
+  .handler(async ({ data }) => {
     const now = new Date().toISOString()
     const result = await db
       .insert(teams)
       .values({
-        ...team,
+        name: data.name.trim(),
+        description: data.description?.trim() || null,
         id: crypto.randomUUID(),
         createdAt: now,
         updatedAt: now,
@@ -106,13 +114,20 @@ export const getTeamMemberById = createServerFn({ method: 'GET' })
   })
 
 export const createTeamMember = createServerFn({ method: 'POST' })
-  .inputValidator((member: CreateTeamMemberData) => member)
-  .handler(async ({ data: member }) => {
+  .inputValidator((data: CreateTeamMemberData) => data)
+  .handler(async ({ data }) => {
     const now = new Date().toISOString()
     const result = await db
       .insert(teamMembers)
       .values({
-        ...member,
+        teamId: data.teamId,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        avatar: data.avatar || null,
+        status: data.status || 'offline',
+        issuesAssigned: data.issuesAssigned || 0,
+        issuesCompleted: data.issuesCompleted || 0,
         id: crypto.randomUUID(),
         createdAt: now,
         updatedAt: now,
@@ -133,9 +148,8 @@ export const updateTeamMember = createServerFn({ method: 'POST' })
   })
 
 export const deleteTeamMember = createServerFn({ method: 'POST' })
-  .inputValidator((input: { data: string }) => input)
-  .handler(async ({ data: input }) => {
-    const id = input.data
+  .inputValidator((id: string) => id)
+  .handler(async ({ data: id }) => {
     const result = await db
       .delete(teamMembers)
       .where(eq(teamMembers.id, id))

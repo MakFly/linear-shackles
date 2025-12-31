@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter  } from '@tanstack/react-router'
 import { useState, useMemo } from 'react'
 import {
   Star,
@@ -32,6 +32,9 @@ import type {
   Automation,
   Sprint,
 } from '@/types/issue'
+import type {
+  DragEndEvent,
+  DragStartEvent} from '@dnd-kit/core';
 import {
   DndContext,
   closestCenter,
@@ -39,8 +42,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
   DragOverlay,
 } from '@dnd-kit/core'
 import {
@@ -52,7 +53,6 @@ import {
 import { toast } from 'sonner'
 import { getMockIssues, getMockSprints } from '@/server/dev-tools-mocks'
 import { updateIssue } from '@/server/db'
-import { useRouter } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/dev-tools/issues/')({
   loader: async () => {

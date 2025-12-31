@@ -3,7 +3,7 @@ import { Plus, Trash2, Play, Pause } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Automation, IssueStatus, IssuePriority } from '@/types/issue'
+import type { Automation, IssueStatus, IssuePriority } from '@/types/issue'
 import {
   Dialog,
   DialogContent,

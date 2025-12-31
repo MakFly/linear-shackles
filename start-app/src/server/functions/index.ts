@@ -5,12 +5,15 @@ export {
   createIssue,
   updateIssue,
   deleteIssue,
+  getIssuesCount,
+  updateIssuePositions,
 } from './issues'
 
 // Projects
 export {
   getProjects,
-  getProjectById,
+  getProjectByIdOrSlug,
+  getProjectByProvider,
   createProject,
   updateProject,
   deleteProject,
@@ -42,10 +45,37 @@ export {
 } from './team'
 
 // Updates
-export { getUpdates, createUpdate, getUpdatesByIssueId } from './updates'
+export { getUpdates, createUpdate, getUpdatesByIssueId, getUpdatesCount } from './updates'
 
 // Relationships
 export { getIssueRelationships } from './relationships'
 
 // Analytics
 export { getAnalyticsData } from './analytics'
+
+// Users
+export {
+  getUsers,
+  getUserById,
+  getUserByEmail,
+  createUser,
+  updateUser,
+  deleteUser,
+} from './users'
+
+// Project Members
+export {
+  getProjectMembers,
+  addProjectMember,
+  removeProjectMember,
+  updateMemberRole,
+  getProjectsForUser,
+} from './projectMembers'
+
+// Provider Credentials
+export {
+  getProviderCredentials,
+  getAllProjectCredentials,
+  saveProviderCredentials,
+  deleteProviderCredentials,
+} from './providerCredentials'

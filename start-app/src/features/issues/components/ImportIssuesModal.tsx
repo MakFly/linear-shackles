@@ -24,7 +24,7 @@ interface ImportIssuesModalProps {
   onOpenChange: (open: boolean) => void
   provider: 'github' | 'gitlab'
   projectId: string
-  remoteIssues: Array<GitHubIssue | GitLabIssue>
+  remoteIssues: (GitHubIssue | GitLabIssue)[]
   isLoading: boolean
   existingProviderIds: Set<string>
   onImportComplete: () => void
@@ -122,10 +122,11 @@ export function ImportIssuesModal({
         const labels = isGitHub
           ? ghIssue.labels.map((l) => l.name)
           : glIssue.labels.map((l) => l.title)
-        const status =
-          (isGitHub ? ghIssue.state === 'closed' : glIssue.state === 'closed')
-            ? 'done'
-            : 'backlog'
+        const status = (
+          isGitHub ? ghIssue.state === 'closed' : glIssue.state === 'closed'
+        )
+          ? 'done'
+          : 'backlog'
 
         const issueId = `${projectId}-import-${Date.now()}-${providerIssueId}`
 
@@ -170,7 +171,7 @@ export function ImportIssuesModal({
       onOpenChange(false)
     },
     onError: (err) => {
-      toast.error(`Erreur: ${(err as Error).message}`)
+      toast.error(`Erreur: ${(err).message}`)
     },
   })
 
@@ -213,7 +214,8 @@ export function ImportIssuesModal({
               ) : (
                 <GitBranch className="h-5 w-5" />
               )}
-              Importer des issues depuis {provider === 'github' ? 'GitHub' : 'GitLab'}
+              Importer des issues depuis{' '}
+              {provider === 'github' ? 'GitHub' : 'GitLab'}
             </span>
             <Button
               variant="ghost"
@@ -335,7 +337,11 @@ export function ImportIssuesModal({
                           #{id}
                         </span>
                         <Badge
-                          variant={state === 'open' || state === 'opened' ? 'default' : 'secondary'}
+                          variant={
+                            state === 'open' || state === 'opened'
+                              ? 'default'
+                              : 'secondary'
+                          }
                           className="text-xs"
                         >
                           {state}

@@ -268,7 +268,7 @@ function Component() {
       }
 
       const providerData = {
-        provider: selectedProvider as 'github' | 'gitlab',
+        provider: selectedProvider,
         providerId: repo.fullName,
         name: repo.name,
         description:
@@ -755,7 +755,7 @@ function Component() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <Link
-                      to={`/projects/${project.id}`}
+                      to={`/projects/${project.slug || project.id}`}
                       className="flex items-center gap-3 flex-1"
                     >
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -781,7 +781,7 @@ function Component() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link to={`/projects/${project.id}`}>
+                          <Link to={`/projects/${project.slug || project.id}`}>
                             Voir le projet
                           </Link>
                         </DropdownMenuItem>
@@ -861,7 +861,9 @@ function Component() {
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => projectToDelete && executeDelete(projectToDelete.id)}
+              onClick={() =>
+                projectToDelete && executeDelete(projectToDelete.id)
+              }
             >
               Supprimer
             </AlertDialogAction>

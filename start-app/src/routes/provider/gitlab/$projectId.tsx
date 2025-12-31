@@ -77,10 +77,12 @@ function Component() {
     createIssue,
   } = gitlab
 
-  const [issues, setIssues] = useState<Array<GitLabIssue>>([])
-  const [mergeRequests, setMergeRequests] = useState<Array<GitLabMergeRequest>>([])
-  const [branches, setBranches] = useState<Array<GitLabBranch>>([])
-  const [pipelines, setPipelines] = useState<Array<GitLabPipeline>>([])
+  const [issues, setIssues] = useState<GitLabIssue[]>([])
+  const [mergeRequests, setMergeRequests] = useState<GitLabMergeRequest[]>(
+    [],
+  )
+  const [branches, setBranches] = useState<GitLabBranch[]>([])
+  const [pipelines, setPipelines] = useState<GitLabPipeline[]>([])
   const [pipelinesUnavailable, setPipelinesUnavailable] = useState(false)
 
   const [loading, setLoading] = useState(false)
@@ -552,9 +554,7 @@ function Component() {
               <Card>
                 <CardContent className="p-8 text-center">
                   <PlayCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    Aucun pipeline
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-2">Aucun pipeline</h3>
                   <p className="text-sm text-muted-foreground">
                     Aucun pipeline n'a encore été exécuté sur ce projet.
                   </p>

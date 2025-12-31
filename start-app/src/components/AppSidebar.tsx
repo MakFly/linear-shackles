@@ -13,7 +13,6 @@ import {
   Moon,
   Rocket,
   Settings,
-  Wrench,
   ChevronRight,
   Database,
 } from 'lucide-react'
@@ -43,11 +42,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { getIssuesCount, getUpdatesCount } from '@/server/db'
 
 const mainNav = [
   { title: 'Overview', url: '/', icon: LayoutDashboard },
-  { title: 'Issues', url: '/issues', icon: ListTodo, badge: '18' },
-  { title: 'Updates', url: '/updates', icon: FileText, badge: '3' },
+  { title: 'Issues', url: '/issues', icon: ListTodo },
+  { title: 'Updates', url: '/updates', icon: FileText },
 ]
 
 const providersNav = [
@@ -72,6 +72,16 @@ const devToolsNav = [
   { title: 'Équipe', url: '/dev-tools/team', icon: Users },
 ]
 
+// Component pour afficher le badge avec compte dynamique
+function CountBadge({ count }: { count: number | string }) {
+  if (count === 0) return null
+  return (
+    <span className="text-xs font-medium text-foreground/70">
+      {count}
+    </span>
+  )
+}
+
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const router = useRouterState()
   const location = { pathname: router.location.pathname }
@@ -79,6 +89,26 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const [devToolsOpen, setDevToolsOpen] = React.useState(
     location.pathname.startsWith('/dev-tools'),
   )
+
+  // Fetch dynamic counts
+  const [issuesCount, setIssuesCount] = React.useState<number>(0)
+  const [updatesCount, setUpdatesCount] = React.useState<number>(0)
+
+  React.useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const [issues, updates] = await Promise.all([
+          getIssuesCount(),
+          getUpdatesCount(),
+        ])
+        setIssuesCount(issues)
+        setUpdatesCount(updates)
+      } catch (error) {
+        console.error('Error fetching counts:', error)
+      }
+    }
+    fetchCounts()
+  }, [])
 
   const isActive = (path: string) => {
     if (path.startsWith('/provider')) {
@@ -89,6 +119,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     }
     return location.pathname === path
   }
+
+  // Map mainNav with dynamic counts
+  const mainNavWithCounts = mainNav.map((item) => {
+    if (item.title === 'Issues') return { ...item, count: issuesCount }
+    if (item.title === 'Updates') return { ...item, count: updatesCount }
+    return item
+  })
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -114,7 +151,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) => (
+              {mainNavWithCounts.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
@@ -129,13 +166,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1">{item.title}</span>
-                      {item.badge && (
-                        <Badge
-                          variant="secondary"
-                          className="h-5 px-1.5 text-xs bg-primary/15 text-primary border-0"
-                        >
-                          {item.badge}
-                        </Badge>
+                      {'count' in item && item.count !== undefined && (
+                        <CountBadge count={item.count} />
                       )}
                     </NavLink>
                   </SidebarMenuButton>

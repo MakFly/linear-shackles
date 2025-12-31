@@ -1,13 +1,13 @@
 import { createServerFn } from '@tanstack/react-start'
 import { db, issues } from '@/db'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, asc } from 'drizzle-orm'
 import type { Issue, NewIssue } from '@/db/schema'
 
 // Type pour créer une issue sans les timestamps (ajoutés automatiquement)
 type CreateIssueInput = Omit<NewIssue, 'createdAt' | 'updatedAt'>
 
 export const getIssues = createServerFn({ method: 'GET' }).handler(async () => {
-  const result = await db.select().from(issues).orderBy(desc(issues.createdAt))
+  const result = await db.select().from(issues).orderBy(asc(issues.position), desc(issues.createdAt))
   return result
 })
 
@@ -48,5 +48,27 @@ export const deleteIssue = createServerFn({ method: 'POST' })
   .inputValidator((id: string) => id)
   .handler(async ({ data: id }) => {
     await db.delete(issues).where(eq(issues.id, id))
+    return { success: true }
+  })
+
+// Count issues
+export const getIssuesCount = createServerFn({ method: 'GET' }).handler(async () => {
+  const result = await db.select().from(issues)
+  return result.length
+})
+
+// Update positions after drag & drop
+type UpdatePositionsInput = Array<{ id: string; position: number }>
+
+export const updateIssuePositions = createServerFn({ method: 'POST' })
+  .inputValidator((data: UpdatePositionsInput) => data)
+  .handler(async ({ data: positions }) => {
+    const now = new Date().toISOString()
+    for (const { id, position } of positions) {
+      await db
+        .update(issues)
+        .set({ position, updatedAt: now })
+        .where(eq(issues.id, id))
+    }
     return { success: true }
   })

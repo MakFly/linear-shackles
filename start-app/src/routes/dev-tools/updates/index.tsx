@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter  } from '@tanstack/react-router'
 import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -31,7 +31,6 @@ import {
 } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { getMockUpdates } from '@/server/dev-tools-mocks'
-import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/dev-tools/updates/')({

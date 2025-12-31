@@ -228,8 +228,9 @@ function Component() {
   const getProgress = (sprint: Sprint) => {
     const sprintIssues = getSprintIssues(sprint, issues)
     if (sprintIssues.length === 0) return 0
-    const doneCount = sprintIssues.filter((issue) => issue.status === 'done')
-      .length
+    const doneCount = sprintIssues.filter(
+      (issue) => issue.status === 'done',
+    ).length
     return Math.round((doneCount / sprintIssues.length) * 100)
   }
 
@@ -566,9 +567,7 @@ function Component() {
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() =>
-                sprintToDelete && handleDelete(sprintToDelete.id)
-              }
+              onClick={() => sprintToDelete && handleDelete(sprintToDelete.id)}
             >
               Supprimer
             </AlertDialogAction>

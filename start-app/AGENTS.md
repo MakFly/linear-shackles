@@ -48,3 +48,8 @@ src/
 - Domain UI belongs in `src/features/<domain>/`.
 - Shared UI primitives live in `src/components/`.
 - Keep transforms near the route loader; keep components dumb.
+
+## Tooling
+
+- Use `bun` for scripts and tests.
+- Always run tests with `bun test` (no pnpm/npm/yarn for tests).

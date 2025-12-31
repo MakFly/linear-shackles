@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter  } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -20,7 +20,6 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { getMockSprints, getMockIssues } from '@/server/dev-tools-mocks'
-import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/dev-tools/sprints/')({
@@ -117,7 +116,7 @@ function Component() {
         <div className="space-y-4">
           {sprints.map((sprint) => {
             const config =
-              statusConfig[sprint.status as keyof typeof statusConfig] ||
+              statusConfig[sprint.status] ||
               statusConfig.planning
             const StatusIcon = config.icon
             const progress = getProgress(sprint)

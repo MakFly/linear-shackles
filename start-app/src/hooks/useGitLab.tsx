@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import type {
   GitLabProject,
   GitLabIssue,
@@ -7,6 +7,11 @@ import type {
   GitLabBranch,
   GitLabPipeline,
 } from '@/types/gitlab'
+import {
+  getProviderCredentials,
+  saveProviderCredentials,
+  deleteProviderCredentials,
+} from '@/server/db'
 
 const DEFAULT_GITLAB_URL = 'https://gitlab.tilvest.com'
 
@@ -59,88 +64,153 @@ const normalizeProjectId = (
   return projectInput.trim()
 }
 
-export const useGitLab = () => {
+export const useGitLab = (options?: { mode: 'global' | 'project'; projectId?: string }) => {
+  const mode = options?.mode || 'global'
+  const projectId = options?.projectId || 'global'
+
   const [token, setToken] = useState<string>('')
-  const [projectId, setProjectId] = useState<string>('')
+  const [projectIdState, setProjectIdState] = useState<string>('')
   const [gitlabUrl, setGitlabUrl] = useState<string>(DEFAULT_GITLAB_URL)
   const [isConnected, setIsConnected] = useState(false)
-  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
 
+  // Load credentials from DB ONLY
   useEffect(() => {
-    const savedToken = localStorage.getItem('gitlab_token')
-    const savedProjectId = localStorage.getItem('gitlab_project_id')
-    const savedUrl = localStorage.getItem('gitlab_url')
+    const loadCredentials = async () => {
+      setLoading(true)
+      try {
+        // First try: load project-specific credentials
+        let credential = await getProviderCredentials({
+          data: { projectId, provider: 'gitlab' },
+        })
 
-    if (savedUrl) {
-      const normalizedUrl = normalizeGitLabUrl(savedUrl)
-      setGitlabUrl(normalizedUrl)
-    }
+        // Fallback: if no project-specific credentials and mode is 'project', try 'global'
+        if (!credential && mode === 'project') {
+          credential = await getProviderCredentials({
+            data: { projectId: 'global', provider: 'gitlab' },
+          })
 
-    if (savedToken) setToken(savedToken)
-    if (savedProjectId) {
-      const currentUrl = savedUrl
-        ? normalizeGitLabUrl(savedUrl)
-        : DEFAULT_GITLAB_URL
-      const normalizedProjectId = normalizeProjectId(savedProjectId, currentUrl)
-      setProjectId(normalizedProjectId)
-      if (normalizedProjectId !== savedProjectId) {
-        localStorage.setItem('gitlab_project_id', normalizedProjectId)
+          // If global credentials found, save them for this project
+          if (credential) {
+            await saveProviderCredentials({
+              data: {
+                projectId,
+                provider: 'gitlab',
+                token: credential.token,
+                providerUrl: credential.providerUrl,
+                providerRepo: credential.providerRepo || null,
+              },
+            })
+          }
+        }
+
+        if (credential) {
+          setToken(credential.token)
+          if (credential.providerUrl) {
+            setGitlabUrl(credential.providerUrl)
+          }
+          if (credential.providerRepo) {
+            setProjectIdState(credential.providerRepo)
+          }
+          setIsConnected(true)
+        } else {
+          // No credentials found
+          setToken('')
+          setProjectIdState('')
+          setGitlabUrl(DEFAULT_GITLAB_URL)
+          setIsConnected(false)
+        }
+      } catch (error) {
+        console.error('Error loading GitLab credentials:', error)
+        setToken('')
+        setProjectIdState('')
+        setGitlabUrl(DEFAULT_GITLAB_URL)
+        setIsConnected(false)
+      } finally {
+        setLoading(false)
       }
     }
-    // Se connecter si on a un token (même sans projet pour lister les projets)
-    if (savedToken) setIsConnected(true)
-  }, [])
 
-  const connect = (
+    loadCredentials()
+  }, [projectId, mode])
+
+  const connect = async (
     newToken: string,
     newProjectId?: string,
     newUrl?: string,
   ) => {
     const url = newUrl ? normalizeGitLabUrl(newUrl) : gitlabUrl
-    localStorage.setItem('gitlab_token', newToken)
-    localStorage.setItem('gitlab_url', url)
-    setToken(newToken)
-    setGitlabUrl(url)
-    setIsConnected(true)
 
-    if (newProjectId) {
-      const normalizedProjectId = normalizeProjectId(newProjectId, url)
-      localStorage.setItem('gitlab_project_id', normalizedProjectId)
-      setProjectId(normalizedProjectId)
-      toast({
-        title: 'GitLab connecté',
-        description: `Projet: ${normalizedProjectId}`,
+    setLoading(true)
+    try {
+      // Save ONLY to DB
+      await saveProviderCredentials({
+        data: {
+          projectId,
+          provider: 'gitlab',
+          token: newToken,
+          providerUrl: url,
+          providerRepo: newProjectId || null,
+        },
       })
-    } else {
-      toast({
-        title: 'GitLab connecté',
-        description: `Connecté à ${url}`,
-      })
+
+      // Update local state
+      setToken(newToken)
+      setGitlabUrl(url)
+      setIsConnected(true)
+
+      if (newProjectId) {
+        const normalizedProjectId = normalizeProjectId(newProjectId, url)
+        setProjectIdState(normalizedProjectId)
+        toast.success('GitLab connecté', {
+          description: `Projet: ${normalizedProjectId}`,
+        })
+      } else {
+        toast.success('GitLab connecté', {
+          description: `Connecté à ${url}`,
+        })
+      }
+    } catch (error) {
+      console.error('Error connecting GitLab:', error)
+      toast.error('Erreur lors de la connexion GitLab')
+      throw error
+    } finally {
+      setLoading(false)
     }
   }
 
-  const disconnect = () => {
-    localStorage.removeItem('gitlab_token')
-    localStorage.removeItem('gitlab_project_id')
-    localStorage.removeItem('gitlab_url')
-    setToken('')
-    setProjectId('')
-    setGitlabUrl(DEFAULT_GITLAB_URL)
-    setIsConnected(false)
-    toast({
-      title: 'GitLab déconnecté',
-    })
+  const disconnect = async () => {
+    setLoading(true)
+    try {
+      // Remove ONLY from DB
+      await deleteProviderCredentials({
+        data: { projectId, provider: 'gitlab' },
+      })
+
+      // Update local state
+      setToken('')
+      setProjectIdState('')
+      setGitlabUrl(DEFAULT_GITLAB_URL)
+      setIsConnected(false)
+      toast.success('GitLab déconnecté')
+    } catch (error) {
+      console.error('Error disconnecting GitLab:', error)
+      toast.error('Erreur lors de la déconnexion GitLab')
+      throw error
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getApiBase = () => `${gitlabUrl}/api/v4`
 
   const makeRequest = async <T,>(endpoint: string): Promise<T> => {
-    if (!token || !projectId) {
+    if (!token || !projectIdState) {
       throw new Error('GitLab not connected')
     }
 
     // Encoder le projectId si c'est un path (owner/repo)
-    const encodedProjectId = encodeURIComponent(projectId)
+    const encodedProjectId = encodeURIComponent(projectIdState)
 
     const response = await fetch(
       `${getApiBase()}/projects/${encodedProjectId}${endpoint}`,
@@ -149,7 +219,7 @@ export const useGitLab = () => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        cache: 'no-store', // Éviter les 304 Not Modified
+        cache: 'no-store',
       },
     )
 
@@ -163,17 +233,16 @@ export const useGitLab = () => {
     return response.json()
   }
 
-  const getUserProjects = async (): Promise<Array<GitLabProject>> => {
+  const getUserProjects = async (): Promise<GitLabProject[]> => {
     if (!token) {
       throw new Error('GitLab not connected')
     }
 
-    const projects: Array<GitLabProject> = []
+    const projects: GitLabProject[] = []
     let page = 1
     const perPage = 100
 
     while (true) {
-      // Ne pas utiliser membership=true pour voir tous les projets accessibles (internal/public)
       const response = await fetch(
         `${getApiBase()}/projects?per_page=${perPage}&page=${page}`,
         {
@@ -195,7 +264,6 @@ export const useGitLab = () => {
       const data: GitLabProject[] = await response.json()
       projects.push(...data)
 
-      // Si on a moins de résultats que perPage, c'est la dernière page
       if (data.length < perPage) {
         break
       }
@@ -230,11 +298,11 @@ export const useGitLab = () => {
   const createIssue = async (
     title: string,
     description?: string,
-    labels?: Array<string>,
+    labels?: string[],
   ) => {
-    if (!token || !projectId) throw new Error('GitLab not connected')
+    if (!token || !projectIdState) throw new Error('GitLab not connected')
 
-    const encodedProjectId = encodeURIComponent(projectId)
+    const encodedProjectId = encodeURIComponent(projectIdState)
 
     const body: Record<string, unknown> = { title }
     if (description) body.description = description
@@ -264,9 +332,9 @@ export const useGitLab = () => {
   }
 
   const closeIssue = async (issueIid: number) => {
-    if (!token || !projectId) throw new Error('GitLab not connected')
+    if (!token || !projectIdState) throw new Error('GitLab not connected')
 
-    const encodedProjectId = encodeURIComponent(projectId)
+    const encodedProjectId = encodeURIComponent(projectIdState)
 
     const response = await fetch(
       `${getApiBase()}/projects/${encodedProjectId}/issues/${issueIid}`,
@@ -294,8 +362,9 @@ export const useGitLab = () => {
   return {
     isConnected,
     token,
-    projectId,
+    projectId: projectIdState,
     gitlabUrl,
+    loading,
     connect,
     disconnect,
     getUserProjects,

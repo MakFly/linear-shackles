@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Plus, Trash2, GripVertical } from 'lucide-react'
+import { Plus, Trash2, GripVertical, CalendarIcon  } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CustomField } from '@/types/issue'
+import type { CustomField } from '@/types/issue'
 import {
   Select,
   SelectContent,
@@ -18,7 +18,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CustomFieldEditorProps {

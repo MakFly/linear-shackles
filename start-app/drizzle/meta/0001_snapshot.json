@@ -154,12 +154,8 @@
           "name": "issue_relationships_source_issue_id_issues_id_fk",
           "tableFrom": "issue_relationships",
           "tableTo": "issues",
-          "columnsFrom": [
-            "source_issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_issue_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -167,12 +163,8 @@
           "name": "issue_relationships_target_issue_id_issues_id_fk",
           "tableFrom": "issue_relationships",
           "tableTo": "issues",
-          "columnsFrom": [
-            "target_issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["target_issue_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -452,12 +444,8 @@
           "name": "sprint_reviews_sprint_id_sprints_id_fk",
           "tableFrom": "sprint_reviews",
           "tableTo": "sprints",
-          "columnsFrom": [
-            "sprint_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sprint_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -637,9 +625,7 @@
       "indexes": {
         "team_members_email_unique": {
           "name": "team_members_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
@@ -648,12 +634,8 @@
           "name": "team_members_team_id_teams_id_fk",
           "tableFrom": "team_members",
           "tableTo": "teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

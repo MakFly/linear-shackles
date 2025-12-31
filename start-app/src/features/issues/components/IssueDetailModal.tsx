@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Dialog,
@@ -15,17 +15,14 @@ import {
   Circle,
   Send,
   Paperclip,
-  MoreHorizontal,
   Trash2,
   ExternalLink,
   Calendar,
-  Loader2,
+  Loader2, Link2, Plus 
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-import { Issue, IssueRelationship, RelationType, Sprint } from '@/types/issue'
-import { Link2, Plus } from 'lucide-react'
-import { CustomFieldEditor } from '@/features/issues/components/CustomFieldEditor'
+import type { Issue, IssueRelationship, RelationType, Sprint } from '@/types/issue'
 import {
   Select,
   SelectContent,
@@ -87,7 +84,7 @@ export const IssueDetailModal = ({
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [title, setTitle] = useState(issue?.title || '')
   const [activeTab, setActiveTab] = useState<
-    'comments' | 'activity' | 'relationships' | 'fields' | 'sprint'
+    'comments' | 'activity' | 'relationships' | 'sprint'
   >('comments')
   const [showAddRelationship, setShowAddRelationship] = useState(false)
   const [newRelationType, setNewRelationType] =
@@ -95,6 +92,13 @@ export const IssueDetailModal = ({
   const [newRelationTarget, setNewRelationTarget] = useState('')
 
   const queryClient = useQueryClient()
+
+  // Reset tab to comments when modal opens
+  useEffect(() => {
+    if (open) {
+      setActiveTab('comments')
+    }
+  }, [open])
 
   // Fetch real updates for this issue
   const { data: updates = [], isLoading: updatesLoading } = useQuery({
@@ -104,7 +108,7 @@ export const IssueDetailModal = ({
   })
 
   // Separate comments from activities
-  const typedUpdates = updates as Array<Update>
+  const typedUpdates = updates as Update[]
   const comments = typedUpdates.filter((u) => u.type === 'comment')
   const activities = typedUpdates.filter((u) => u.type !== 'comment')
 
@@ -219,9 +223,6 @@ export const IssueDetailModal = ({
                 </DialogTitle>
               )}
             </div>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
           </div>
         </DialogHeader>
 
@@ -230,7 +231,7 @@ export const IssueDetailModal = ({
             <h3 className="text-sm font-medium mb-2">Description</h3>
             <Textarea
               placeholder="Ajouter une description..."
-              className="min-h-[100px] bg-accent/50 border-border"
+              className="min-h-[150px] bg-accent/50 border-border"
               defaultValue={
                 issue.description ||
                 'Aller à la police de Saint Jean de Luz pour déclarer le vol et obtenir un récépissé officiel. Apporter tous les documents nécessaires.'
@@ -272,17 +273,6 @@ export const IssueDetailModal = ({
                 onClick={() => setActiveTab('relationships')}
               >
                 Relations ({issue.relationships?.length || 0})
-              </button>
-              <button
-                className={cn(
-                  'text-sm pb-2 border-b-2 transition-colors',
-                  activeTab === 'fields'
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
-                )}
-                onClick={() => setActiveTab('fields')}
-              >
-                Champs ({issue.customFields?.length || 0})
               </button>
               <button
                 className={cn(
@@ -341,7 +331,7 @@ export const IssueDetailModal = ({
                       placeholder="Ajouter un commentaire..."
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      className="min-h-[80px] mb-2"
+                      className="min-h-[120px] mb-2"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                           handleSendComment()
@@ -356,7 +346,9 @@ export const IssueDetailModal = ({
                       <Button
                         size="sm"
                         onClick={handleSendComment}
-                        disabled={!comment.trim() || createCommentMutation.isPending}
+                        disabled={
+                          !comment.trim() || createCommentMutation.isPending
+                        }
                       >
                         {createCommentMutation.isPending ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -516,23 +508,6 @@ export const IssueDetailModal = ({
                     <Plus className="h-4 w-4 mr-2" />
                     Ajouter une relation
                   </Button>
-                )}
-              </div>
-            ) : activeTab === 'fields' ? (
-              <div>
-                <CustomFieldEditor
-                  fields={issue.customFields || []}
-                  onChange={(fields) => {
-                    if (onUpdateIssue) {
-                      onUpdateIssue({ ...issue, customFields: fields })
-                    }
-                  }}
-                  editMode={false}
-                />
-                {(!issue.customFields || issue.customFields.length === 0) && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Aucun champ personnalisé
-                  </p>
                 )}
               </div>
             ) : activeTab === 'sprint' ? (

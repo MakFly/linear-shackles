@@ -1,8 +1,8 @@
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import * as schema from './schema/index'
-import { existsSync, mkdirSync } from 'fs'
-import { dirname } from 'path'
+import { existsSync, mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 
 const dbPath = './data/dev.db'
 

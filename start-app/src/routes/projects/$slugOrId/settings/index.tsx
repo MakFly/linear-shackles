@@ -32,22 +32,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { getProjectById, updateProject, deleteProject } from '@/server/db'
-import { Github, Gitlab, CheckCircle2, Loader2 } from 'lucide-react'
+import { getProjectByIdOrSlug, updateProject, deleteProject, getProjectMembers } from '@/server/db'
+import {
+  Github,
+  Gitlab,
+  CheckCircle2,
+  Loader2,
+  ExternalLink,
+  X,
+} from 'lucide-react'
 import { toast } from 'sonner'
+import { MembersList } from '@/components/members/MembersList'
+import { AddMemberDialog } from '@/components/members/AddMemberDialog'
 
-export const Route = createFileRoute('/projects/$projectId/settings/')({
+export const Route = createFileRoute('/projects/$slugOrId/settings/')({
   component: ProjectSettings,
   loader: async ({ params }) => {
-    const project = await getProjectById({ data: params.projectId })
-    return { project }
+    const project = await getProjectByIdOrSlug({ data: params.slugOrId })
+    const members = await getProjectMembers({ data: params.slugOrId })
+    return { project, members }
   },
 })
 
 function ProjectSettings() {
-  const { projectId } = Route.useParams()
-  const { project } = Route.useLoaderData()
+  const { slugOrId } = Route.useParams()
+  const { project, members } = Route.useLoaderData()
   const router = useRouter()
+
+  // Mock current user - à remplacer par vrai système d'auth
+  const currentUserId = 'user-1' // TODO: Récupérer depuis auth context
+  const currentUserRole = members?.find((m) => m.userId === currentUserId)?.role
 
   // États pour les formulaires
   const [generalForm, setGeneralForm] = useState({
@@ -70,6 +84,7 @@ function ProjectSettings() {
   const [savingDates, setSavingDates] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [disconnectingProvider, setDisconnectingProvider] = useState(false)
 
   // Synchroniser les formulaires avec le projet
   useEffect(() => {
@@ -85,33 +100,13 @@ function ProjectSettings() {
     }
   }, [project])
 
-  // Détecter le provider depuis la description du projet
-  const provider = useMemo(() => {
-    if (!project?.description) return null
-    if (project.description.includes('provider:github:')) return 'github'
-    if (project.description.includes('provider:gitlab:')) return 'gitlab'
-    return null
-  }, [project?.description])
+  // Provider depuis les colonnes dédiées
+  const provider = project?.provider as 'github' | 'gitlab' | null
+  const providerProjectId = project?.providerProjectId || null
+  const providerUrl = project?.providerUrl || null
 
-  // Extraire l'identifiant du provider
-  const providerInfo = useMemo(() => {
-    if (!project?.description || !provider) return null
-    const match = project.description.match(
-      /provider:(github|gitlab):([^\s\n]+)/,
-    )
-    return match ? match[2] : null
-  }, [project?.description, provider])
-
-  // Préserver le provider dans la description lors de la mise à jour
-  const preserveProviderInDescription = (newDescription: string) => {
-    if (!provider || !providerInfo) return newDescription
-    const providerPrefix = `provider:${provider}:${providerInfo}`
-    // Si la nouvelle description ne contient pas déjà le provider, l'ajouter
-    if (!newDescription.includes(providerPrefix)) {
-      return newDescription ? `${newDescription}\n\n${providerPrefix}` : providerPrefix
-    }
-    return newDescription
-  }
+  const isGitHubConnected = provider === 'github' && !!providerProjectId
+  const isGitLabConnected = provider === 'gitlab' && !!providerProjectId
 
   const handleSaveGeneral = async () => {
     if (!generalForm.name.trim()) {
@@ -121,13 +116,12 @@ function ProjectSettings() {
 
     const saveOperation = async () => {
       setSavingGeneral(true)
-      const descriptionWithProvider = preserveProviderInDescription(generalForm.description)
       const updated = await updateProject({
-        id: projectId,
+        id: slugOrId,
         updates: {
           name: generalForm.name,
-          description: descriptionWithProvider,
-          status: generalForm.status as 'active' | 'completed' | 'paused',
+          description: generalForm.description || null,
+          status: generalForm.status,
         },
       })
       router.invalidate()
@@ -151,7 +145,7 @@ function ProjectSettings() {
     const saveOperation = async () => {
       setSavingDates(true)
       const updated = await updateProject({
-        id: projectId,
+        id: slugOrId,
         updates: {
           dueDate: datesForm.dueDate || null,
         },
@@ -173,10 +167,30 @@ function ProjectSettings() {
     })
   }
 
+  const handleDisconnectProvider = async () => {
+    setDisconnectingProvider(true)
+    try {
+      await updateProject({
+        id: slugOrId,
+        updates: {
+          provider: null,
+          providerProjectId: null,
+          providerUrl: null,
+        },
+      })
+      router.invalidate()
+      toast.success('Intégration déconnectée')
+    } catch (error) {
+      toast.error('Erreur lors de la déconnexion')
+    } finally {
+      setDisconnectingProvider(false)
+    }
+  }
+
   const executeDeleteProject = async () => {
     setDeleting(true)
     try {
-      await deleteProject({ data: projectId })
+      await deleteProject({ data: slugOrId })
       toast.success('Projet supprimé')
       router.navigate({ to: '/projects' })
     } catch (error) {
@@ -188,17 +202,17 @@ function ProjectSettings() {
   }
 
   return (
-    <div className="flex-1 overflow-auto scrollbar-custom">
-      <div className="p-6 space-y-6">
+    <div className="p-6">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Paramètres - {projectId}</h1>
+          <h1 className="text-3xl font-bold">Paramètres</h1>
           <p className="text-muted-foreground mt-1">
             Gérez les paramètres et la configuration de ce projet
           </p>
         </div>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
             <TabsTrigger value="general">Général</TabsTrigger>
             <TabsTrigger value="members">Membres</TabsTrigger>
             <TabsTrigger value="integrations">Intégrations</TabsTrigger>
@@ -298,100 +312,177 @@ function ProjectSettings() {
           <TabsContent value="members" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Membres de l'équipe</CardTitle>
-                <CardDescription>
-                  Gérez les membres ayant accès à ce projet
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Membres de l'équipe</CardTitle>
+                    <CardDescription>
+                      Gérez les membres ayant accès à ce projet
+                    </CardDescription>
+                  </div>
+                  <AddMemberDialog
+                    projectId={slugOrId}
+                    projectMembers={members}
+                    onMemberAdded={() => router.invalidate()}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Fonctionnalité à venir
-                </p>
+                <MembersList
+                  projectId={slugOrId}
+                  members={members || []}
+                  currentUserId={currentUserId}
+                  currentUserRole={currentUserRole}
+                  onUpdated={() => router.invalidate()}
+                />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="integrations" className="space-y-4">
+            {/* GitHub Integration */}
             <Card>
-              <CardHeader>
-                <CardTitle>Intégrations</CardTitle>
-                <CardDescription>
-                  Connectez des services externes à ce projet
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {provider !== 'gitlab' && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Github className="h-5 w-5 text-muted-foreground" />
-                        <div className="space-y-0.5 flex-1">
-                          <div className="flex items-center gap-2">
-                            <Label>GitHub</Label>
-                            {provider === 'github' && (
-                              <Badge variant="secondary" className="gap-1">
-                                <CheckCircle2 className="h-3 w-3" />
-                                Configuré
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {provider === 'github' && providerInfo
-                              ? `Synchronisé avec ${providerInfo}`
-                              : 'Synchroniser les issues et PRs depuis GitHub'}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/provider/github">
-                          {provider === 'github' ? 'Modifier' : 'Configurer'}
-                        </Link>
-                      </Button>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shrink-0">
+                      <Github className="h-5 w-5 text-white" />
                     </div>
-                    {provider !== 'github' && <Separator />}
-                  </>
-                )}
-                {provider !== 'github' && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1">
-                        <Gitlab className="h-5 w-5 text-muted-foreground" />
-                        <div className="space-y-0.5 flex-1">
-                          <div className="flex items-center gap-2">
-                            <Label>GitLab</Label>
-                            {provider === 'gitlab' && (
-                              <Badge variant="secondary" className="gap-1">
-                                <CheckCircle2 className="h-3 w-3" />
-                                Configuré
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {provider === 'gitlab' && providerInfo
-                              ? `Synchronisé avec ${providerInfo}`
-                              : 'Synchroniser les issues et MRs depuis GitLab'}
-                          </p>
-                        </div>
+                    <div className="space-y-0.5 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="font-semibold">GitHub</Label>
+                        {isGitHubConnected && (
+                          <Badge variant="secondary" className="gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Connecté
+                          </Badge>
+                        )}
                       </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/provider/gitlab">
-                          {provider === 'gitlab' ? 'Modifier' : 'Configurer'}
-                        </Link>
-                      </Button>
+                      <p className="text-sm text-muted-foreground">
+                        {isGitHubConnected
+                          ? `Connecté à ${providerProjectId}`
+                          : 'Connectez un repository GitHub pour synchroniser les issues et PRs'}
+                      </p>
                     </div>
-                    {provider !== 'gitlab' && <Separator />}
-                  </>
-                )}
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5 flex-1">
-                    <Label>Slack</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Recevoir les notifications sur Slack
-                    </p>
                   </div>
-                  <Button variant="outline" size="sm" disabled>
-                    Bientôt disponible
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {isGitHubConnected && providerUrl && (
+                      <Button variant="ghost" size="icon" asChild>
+                        <a
+                          href={providerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Voir sur GitHub"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                    {isGitHubConnected ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDisconnectProvider}
+                        disabled={disconnectingProvider}
+                      >
+                        {disconnectingProvider ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <X className="h-4 w-4 mr-1" />
+                            Déconnecter
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/provider/github">Connecter</Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* GitLab Integration */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shrink-0">
+                      <Gitlab className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="space-y-0.5 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Label className="font-semibold">GitLab</Label>
+                        {isGitLabConnected && (
+                          <Badge variant="secondary" className="gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Connecté
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {isGitLabConnected
+                          ? `Connecté à ${providerProjectId}`
+                          : 'Connectez un projet GitLab pour synchroniser les issues et MRs'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isGitLabConnected && providerUrl && (
+                      <Button variant="ghost" size="icon" asChild>
+                        <a
+                          href={providerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Voir sur GitLab"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                    {isGitLabConnected ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDisconnectProvider}
+                        disabled={disconnectingProvider}
+                      >
+                        {disconnectingProvider ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <X className="h-4 w-4 mr-1" />
+                            Déconnecter
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/provider/gitlab">Connecter</Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Coming Soon Integrations */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">S</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <Label>Slack</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Recevoir les notifications sur Slack
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary">Bientôt</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -501,14 +592,20 @@ function ProjectSettings() {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce projet ?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Êtes-vous sûr de vouloir supprimer ce projet ?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Toutes les données associées à ce projet seront définitivement supprimées.
+              Cette action est irréversible. Toutes les données associées à ce
+              projet seront définitivement supprimées.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={executeDeleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={executeDeleteProject}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>

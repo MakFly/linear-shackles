@@ -16,7 +16,7 @@ export const issueTemplates = sqliteTable('issue_templates', {
     .notNull()
     .default('medium'),
   customFields: text('custom_fields', { mode: 'json' }),
-  labels: text('labels', { mode: 'json' }).$type<Array<string>>(),
+  labels: text('labels', { mode: 'json' }).$type<string[]>(),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })

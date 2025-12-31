@@ -22,43 +22,44 @@ import {
   Line,
   Legend,
 } from 'recharts'
+import type {
+  CheckCircle2} from 'lucide-react';
 import {
   TrendingUp,
   TrendingDown,
-  CheckCircle2,
   Clock,
   AlertTriangle,
   Target,
 } from 'lucide-react'
 
-export const Route = createFileRoute('/projects/$projectId/analytics/')({
+export const Route = createFileRoute('/projects/$slugOrId/analytics/')({
   component: ProjectAnalytics,
 })
 
 // Empty - DB is empty, only dev-tools has mock data
-const issuesByStatus: Array<{ name: string; value: number; color: string }> = []
-const velocityData: Array<{
+const issuesByStatus: { name: string; value: number; color: string }[] = []
+const velocityData: {
   sprint: string
   planned: number
   completed: number
-}> = []
-const issuesTrend: Array<{ date: string; created: number; resolved: number }> =
+}[] = []
+const issuesTrend: { date: string; created: number; resolved: number }[] =
   []
 
-const stats: Array<{
+const stats: {
   title: string
   value: string
   change: string
   trend: string
   icon: typeof CheckCircle2
   description: string
-}> = []
+}[] = []
 
 function ProjectAnalytics() {
   const { projectId } = Route.useParams()
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 scrollbar-custom">
+    <div className="p-6">
       <div className="space-y-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">

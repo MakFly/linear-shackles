@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
+import type {
   IssueTemplate,
   IssuePriority,
-  IssueStatus,
+  IssueStatus} from '@/types/issue';
+import {
   CustomField,
 } from '@/types/issue'
 import { CustomFieldEditor } from '@/features/issues/components/CustomFieldEditor'

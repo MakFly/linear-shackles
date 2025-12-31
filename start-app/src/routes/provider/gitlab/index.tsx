@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { ColumnDef } from '@tanstack/react-table'
-import { useGitProvider, type GitRepository } from '@/hooks/useGitProvider'
+import type { ColumnDef } from '@tanstack/react-table'
+import { useGitProvider  } from '@/hooks/useGitProvider'
+import type {GitRepository} from '@/hooks/useGitProvider';
 import { DataTable } from '@/components/ui/data-table'
 import {
   Card,
@@ -44,8 +45,10 @@ function Component() {
   const { toast } = useToast()
   const [showSettings, setShowSettings] = useState(!provider.isConnected)
   const [tokenInput, setTokenInput] = useState('')
-  const [urlInput, setUrlInput] = useState(provider.baseUrl || 'https://gitlab.tilvest.com')
-  const [repositories, setRepositories] = useState<Array<GitRepository>>([])
+  const [urlInput, setUrlInput] = useState(
+    provider.baseUrl || 'https://gitlab.tilvest.com',
+  )
+  const [repositories, setRepositories] = useState<GitRepository[]>([])
   const [loading, setLoading] = useState(false)
 
   const loadRepositories = async () => {
@@ -191,9 +194,9 @@ function Component() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Important :</strong> Votre token sera stocké localement
-                dans le navigateur. Pour une sécurité optimale, utilisez un
-                Personal Access Token avec des permissions limitées.
+                <strong>Important :</strong> Votre token sera stocké dans la base de
+                données (SQLite) de l'application. Pour une sécurité optimale,
+                utilisez un Personal Access Token avec des permissions limitées.
               </AlertDescription>
             </Alert>
 
@@ -390,7 +393,8 @@ function TokenHelpDialog({ provider }: { provider: 'github' | 'gitlab' }) {
                           (obligatoire)
                         </span>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Accès complet à l'API. Permet de lire, créer, modifier et supprimer les issues.
+                          Accès complet à l'API. Permet de lire, créer, modifier
+                          et supprimer les issues.
                         </p>
                       </div>
                     </div>
@@ -409,7 +413,9 @@ function TokenHelpDialog({ provider }: { provider: 'github' | 'gitlab' }) {
                     <div className="flex items-start gap-2">
                       <Check className="h-4 w-4 text-green-600 mt-0.5" />
                       <div>
-                        <span className="text-sm font-mono">read_repository</span>
+                        <span className="text-sm font-mono">
+                          read_repository
+                        </span>
                         <span className="text-sm text-muted-foreground ml-2">
                           (optionnel)
                         </span>
@@ -421,7 +427,8 @@ function TokenHelpDialog({ provider }: { provider: 'github' | 'gitlab' }) {
                   </div>
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-md p-3 mt-3">
                     <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                      <strong>⚠️ Sans le scope "api"</strong>, vous ne pourrez pas créer, modifier ou supprimer d'issues.
+                      <strong>⚠️ Sans le scope "api"</strong>, vous ne pourrez
+                      pas créer, modifier ou supprimer d'issues.
                     </p>
                   </div>
                 </div>
@@ -445,8 +452,8 @@ function TokenHelpDialog({ provider }: { provider: 'github' | 'gitlab' }) {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <strong>Sécurité :</strong> Ne partagez jamais votre token. Il
-                donne accès à vos projets GitLab. Stockez-le de manière
-                sécurisée.
+                donne accès à vos projets GitLab. Stocké dans la base de données
+                de l'application.
               </AlertDescription>
             </Alert>
           </div>

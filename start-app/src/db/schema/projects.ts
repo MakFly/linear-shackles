@@ -5,6 +5,12 @@ export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
+  // NEW: Slug for user-friendly URLs
+  slug: text('slug').unique(),
+  // NEW: Provider fields (null for native projects)
+  provider: text('provider', { enum: ['github', 'gitlab'] }),
+  providerProjectId: text('provider_project_id'), // owner/repo or group/project
+  providerUrl: text('provider_url'), // Full URL to external project
   status: text('status', {
     enum: ['active', 'completed', 'paused'],
   })

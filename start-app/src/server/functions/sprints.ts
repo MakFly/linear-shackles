@@ -22,13 +22,15 @@ const generateId = () => {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export const getSprints = createServerFn({ method: 'GET' }).handler(async () => {
+export const getSprints = createServerFn({ method: 'GET' }).handler(
+  async () => {
     const result = await db
       .select()
       .from(sprints)
       .orderBy(desc(sprints.createdAt))
     return result
-})
+  },
+)
 
 export const getSprintById = createServerFn({ method: 'GET' })
   .inputValidator((id: string) => id)

@@ -20,13 +20,8 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove, SortableContext, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  createContext,
-  type HTMLAttributes,
-  type ReactNode,
-  useContext,
-  useState,
-} from 'react'
+import { createContext, useContext, useState } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import tunnel from 'tunnel-rat'
 import { Card } from '@/components/ui/card'
@@ -109,7 +104,7 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
   } = useSortable({
     id,
   })
-  const { activeCardId } = useContext(KanbanContext) as KanbanContextProps
+  const { activeCardId } = useContext(KanbanContext)
 
   const style = {
     transition,
